@@ -1,7 +1,11 @@
 package br.uff.ic
 
+import br.uff.ic.collector.CSVChannel
+import br.uff.ic.collector.ExplicitImportCollector
+import br.uff.ic.collector.Project
 import br.uff.ic.io.deleteOnShutdown
 import br.uff.ic.vcs.SystemGit
+import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
 import java.io.File
 import java.nio.file.Files
@@ -52,6 +56,10 @@ object ImportMining {
                 SystemGit().clone(repoUrl, repoDir)
             } else {
                 repoDir = File(cmd.getOptionValue("d"))
+            }
+            val output = File(cmd.getOptionValue("output"))
+            runBlocking {
+                ExplicitImportCollector(CSVChannel()).collect(Project(repoDir), output)
             }
         } catch (e: ParseException) {
             println(e.message)
