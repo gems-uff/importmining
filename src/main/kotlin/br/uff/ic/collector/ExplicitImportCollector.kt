@@ -1,6 +1,8 @@
 package br.uff.ic.collector
 
 import br.uff.ic.FileImports
+import br.uff.ic.logger.Logger
+import br.uff.ic.logger.LoggerFactory
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
@@ -11,7 +13,10 @@ import java.io.File
 import java.io.FileInputStream
 
 class ExplicitImportCollector(private val outputChannel: OutputChannel) : ImportCollector {
+    private companion object : Logger by LoggerFactory.new(ExplicitImportCollector::class.java.canonicalName)
+
     suspend override fun collect(project: Project, output: File) {
+        info("Collecting imports of ${project.mainPackage}")
         val fileImportsChannel = Channel<FileImports>()
         project.javaFiles.forEach {
             collect(it, fileImportsChannel)
@@ -22,11 +27,13 @@ class ExplicitImportCollector(private val outputChannel: OutputChannel) : Import
             val imp = fileImportsChannel.receive()
             fileImports.add(imp)
             localImports.addAll(imp.imports.filter { it.startsWith(project.mainPackage) })
+            debug("Collected ${localImports.size} imports.")
         }
+        info("Finished collect of imports, ${localImports.size} imports where collected")
         val importPerFile = fileImports.map {
-            it.copy(imports = it.imports.intersect(localImports).toList())
+            it.copy(imports = it.imports.intersect(localImports).toList().filter { it.isNotEmpty() })
         }.filter { it.imports.isNotEmpty() }
-        outputChannel.save(importPerFile, output)
+        outputChannel.save(project, importPerFile, output)
 
     }
 

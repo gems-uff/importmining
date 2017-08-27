@@ -7,17 +7,15 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import java.io.File
 import java.io.FileInputStream
 
-class Project(project: File) {
+class Project(val project: File) {
     val javaFiles: List<String> = project.listFileWithSuffix(".java")
-    val mainPackage = project.listFiles { file ->
-        file.name.endsWith(".java")
-    }.first().let {
+    val mainPackage = javaFiles.map {
         val v = PackageVisitor()
         val input = FileInputStream(it)
         val cu = JavaParser.parse(input)
         v.visit(cu, null)
         v.packageName
-    }
+    }.filter { it.isNotEmpty() }.min()!!
 
     private class PackageVisitor : VoidVisitorAdapter<Void>() {
         var packageName: String = ""

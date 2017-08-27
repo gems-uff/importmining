@@ -4,6 +4,8 @@ import br.uff.ic.collector.CSVChannel
 import br.uff.ic.collector.ExplicitImportCollector
 import br.uff.ic.collector.Project
 import br.uff.ic.io.deleteOnShutdown
+import br.uff.ic.logger.ConsoleHandler
+import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.vcs.SystemGit
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
@@ -13,6 +15,7 @@ import java.nio.file.Files
 
 object ImportMining {
     fun execute(args: Array<String>) {
+        LoggerFactory.addHandler(ConsoleHandler())
         val options = Options()
         with(options) {
             addOptionGroup(OptionGroup().let { group ->
@@ -47,7 +50,7 @@ object ImportMining {
                     setReadable(true, true)
                     setWritable(true, true)
                     if (!exists()) {
-                        error("Could not create directory")
+                        error("Could not new directory")
                     }
                     this
                 }
