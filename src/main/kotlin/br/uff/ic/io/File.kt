@@ -16,3 +16,13 @@ fun File.deleteOnShutdown() {
         delete(this.absoluteFile)
     })
 }
+
+fun File.listFileWithSuffix(suffix: String): List<String> {
+    val filteredFiles = this.listFiles { file ->
+        file.name.endsWith(suffix)
+    }.map { it.absolutePath }.toList()
+    val childrenFilteredFiles = this.listFiles { file ->
+        file.isDirectory
+    }.map { it.listFileWithSuffix(suffix) }.flatten()
+    return childrenFilteredFiles + filteredFiles
+}
