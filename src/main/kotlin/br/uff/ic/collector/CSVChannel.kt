@@ -1,6 +1,5 @@
 package br.uff.ic.collector
 
-import br.uff.ic.FileImports
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import java.io.BufferedWriter
@@ -25,7 +24,7 @@ class CSVChannel(private val fieldSep: String = ",", private val lineSep: String
                 debug("Writing line #$lines.")
                 lines += 1
                 val cleanName = file.substring(project.project.absolutePath.length + 1, file.length - 5).replace("/", ".")
-                val imps = Array(sortedLocalImports.size) { "X" }
+                val imps = Array(sortedLocalImports.size) { "?" }
                 imports.forEach {
                     imps[localImportIndex[it]!!] = "T"
                 }

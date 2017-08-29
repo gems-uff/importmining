@@ -1,6 +1,5 @@
 package br.uff.ic.collector
 
-import br.uff.ic.FileImports
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import com.github.javaparser.JavaParser
