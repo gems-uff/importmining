@@ -6,6 +6,8 @@ import br.uff.ic.collector.Project
 import br.uff.ic.io.deleteOnShutdown
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
+import br.uff.ic.mining.WekaFeatureSelection
+import br.uff.ic.mining.WekaRulerExtractor
 import br.uff.ic.vcs.SystemGit
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
@@ -18,51 +20,56 @@ object ImportMining {
         LoggerFactory.addHandler(ConsoleHandler())
         val options = Options()
         with(options) {
+            addOption(
+                "op",
+                "operation",
+                true,
+                "Operation to be executed. Possible values are: collect, process, full"
+            )
             addOptionGroup(OptionGroup().let { group ->
-                addOption(
+                group.addOption(
+                    Option(
                         "r",
                         "repository",
                         true,
                         """The repository name on github. i. e. 'gems-uff/importmining'. Use this if you want to clone a repo. Specify this OR the 'repository-directory' option."""
+                    )
                 )
-                addOption(
+                group.addOption(
+                    Option(
                         "d",
                         "repository-directory",
                         true,
                         """The UNIX-like repository absolute path. i. e. '/path/to/repo'. Use this if you want to use a repository that is already been cloned.  Specify this OR the 'repository' option"""
+                    )
+                )
+                group.addOption(
+                    Option(
+                        "i",
+                        "input",
+                        true,
+                        """The UNIX-like csv absolute path. i. e. '/path/to/repcsv'. Use this if you want to use a CSV generate on a previous execution."""
+                    )
                 )
                 group
             })
             addRequiredOption(
-                    "o",
-                    "output",
-                    true,
-                    "The UNIX-like output absolute path."
+                "o",
+                "output",
+                true,
+                "The UNIX-like output absolute path."
             )
         }
         try {
             val parser = DefaultParser()
             val cmd: CommandLine = parser.parse(options, args)
-            val repoDir: File
-            if (cmd.hasOption("r")) {
-                repoDir = with(Files.createDirectory(File("temp${System.nanoTime()}").toPath()).toFile()) {
-                    deleteOnShutdown()
-                    setReadable(true, true)
-                    setWritable(true, true)
-                    if (!exists()) {
-                        error("Could not new directory")
-                    }
-                    this
+            when (cmd.getOptionValue("op")) {
+                "collect" -> {
+                    collect(cmd)
                 }
-                val repoUrl = "https://github.com/${cmd.getOptionValue("r")}.git"
-                println("Cloning repo: $repoUrl")
-                SystemGit().clone(repoUrl, repoDir)
-            } else {
-                repoDir = File(cmd.getOptionValue("d"))
-            }
-            val output = File(cmd.getOptionValue("output"))
-            runBlocking {
-                ExplicitImportCollector(CSVChannel()).collect(Project(repoDir), output)
+                "process" -> {
+                    process(cmd)
+                }
             }
         } catch (e: ParseException) {
             println(e.message)
@@ -71,8 +78,40 @@ object ImportMining {
             System.exit(1)
         } catch (e: Exception) {
             println(e.message)
+            e.printStackTrace()
         }
 
+    }
+
+    private fun process(cmd: CommandLine) {
+        runBlocking {
+            val output = File(cmd.getOptionValue("input"))
+            WekaRulerExtractor(WekaFeatureSelection()).extract(output.absolutePath)
+        }
+    }
+
+    private fun collect(cmd: CommandLine) {
+        val repoDir: File
+        if (cmd.hasOption("r")) {
+            repoDir = with(Files.createDirectory(File("temp${System.nanoTime()}").toPath()).toFile()) {
+                deleteOnShutdown()
+                setReadable(true, true)
+                setWritable(true, true)
+                if (!exists()) {
+                    error("Could not new directory")
+                }
+                this
+            }
+            val repoUrl = "https://github.com/${cmd.getOptionValue("r")}.git"
+            println("Cloning repo: $repoUrl")
+            SystemGit().clone(repoUrl, repoDir)
+        } else {
+            repoDir = File(cmd.getOptionValue("d"))
+        }
+        val output = File(cmd.getOptionValue("output"))
+        runBlocking {
+            ExplicitImportCollector(CSVChannel()).collect(Project(repoDir), output)
+        }
     }
 
 
@@ -80,6 +119,6 @@ object ImportMining {
 
 fun main(args: Array<String>) {
     ImportMining.execute(
-            "-r kohsuke/args4j -o out.csv".split(" ").toTypedArray()
+        "-op process -i out.csv -o out.json".split(" ").toTypedArray()
     )
 }
