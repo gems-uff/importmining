@@ -8,7 +8,7 @@ import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.WekaFeatureSelection
 import br.uff.ic.mining.WekaRulerExtractor
-import br.uff.ic.vcs.SystemGit
+import br.uff.ic.vcs.JGit
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
 import java.io.File
@@ -102,9 +102,9 @@ object ImportMining {
                 }
                 this
             }
-            val repoUrl = "https://github.com/${cmd.getOptionValue("r")}.git"
-            println("Cloning repo: $repoUrl")
-            SystemGit().clone(repoUrl, repoDir)
+            val repoURI = "https://github.com/${cmd.getOptionValue("r")}.git"
+            println("Cloning repo: $repoURI")
+            JGit().clone(repoURI, repoDir)
         } else {
             repoDir = File(cmd.getOptionValue("d"))
         }

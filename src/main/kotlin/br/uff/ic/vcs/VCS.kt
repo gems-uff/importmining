@@ -4,5 +4,5 @@ import java.io.File
 
 
 interface VCS {
-    fun clone(url: String, directory: File)
+    fun clone(uri: String, directory: File)
 }
