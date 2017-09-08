@@ -2,19 +2,22 @@ group 'br.uff.ic'
 version '1.0.0'
 
 buildscript {
-    ext.kotlin_version = '1.1.4-2'
+    ext.kotlin_version = '1.1.4-3'
 
     repositories {
         mavenCentral()
     }
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'application'
+apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.8
 
@@ -26,16 +29,78 @@ repositories {
     jcenter()
 }
 
+def versions = [
+    kotlin    : '1.1.4-3',
+    coroutines: '0.18',
+    jackson   : '2.8.9',
+    spek      : '1.1.4',
+    jgit      : '4.8.0.201706111038-r',
+    kluent    : '1.28',
+    javaparser: '3.3.2',
+    weka      : '3.8.1',
+    commonscli: '1.4'
+]
+
+def libraries = [
+    kotlin        : [
+        "org.jetbrains.kotlin:kotlin-stdlib-jre8:${versions.kotlin}",
+        "org.jetbrains.kotlin:kotlin-reflect:${versions.kotlin}",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${versions.coroutines}"
+    ],
+    serializer    : [
+        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+        "com.fasterxml.jackson.module:jackson-module-kotlin:${versions.jackson}",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${versions.jackson}"
+    ],
+    vcs           : [
+        "org.eclipse.jgit:org.eclipse.jgit:${versions.jgit}"
+    ],
+    mining    : [
+        "nz.ac.waikato.cms.weka:weka-stable:${versions.weka}"
+    ],
+    parser        : [
+        "com.github.javaparser:javaparser-core:${versions.javaparser}"
+    ],
+    utils         : [
+        "commons-cli:commons-cli:${versions.commonscli}"
+    ],
+    testing       : [
+        "org.jetbrains.spek:spek-api:${versions.spek}",
+        "org.amshove.kluent:kluent:${versions.kluent}"
+    ],
+    testingRuntime: [
+        "org.jetbrains.spek:spek-junit-platform-engine:${versions.spek}"
+    ]
+]
+
 dependencies {
-    compile group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '4.8.0.201706111038-r'
-    compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jre8', version: kotlin_version
-    compile group: 'nz.ac.waikato.cms.weka', name: 'weka-stable', version: '3.8.1'
-    compile group: 'com.github.javaparser', name: 'javaparser-core', version: '3.3.2'
-    compile group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '0.16'
-    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    compile libraries.kotlin
+    compile libraries.serializer
+    compile libraries.vcs
+    compile libraries.mining
+    compile libraries.parser
+    compile libraries.utils
 
-    testCompile group: 'org.jetbrains.spek', name: 'spek-api', version: '1.1.3'
+    testCompile libraries.testing
+    testRuntime libraries.testingRuntime
+}
 
+build {
+    doLast {
+        new File('src/test/resources/mockito-extensions').mkdirs()
+        def mockMaker = new File('src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker')
+        mockMaker.text = 'mock-maker-inline'
+    }
+}
+
+
+junitPlatform {
+    filters {
+        engines {
+            include 'spek'
+        }
+    }
+    platformVersion versions.junit
 }
 
 compileKotlin {
