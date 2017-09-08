@@ -2,15 +2,16 @@ featureSelector:
   - RemoveAttribute:
     - name
 ruleExtractor:
+    workers: 10
     FPGrowth:
       support:
         minimum: 0.1
         maximum: 1.0
         step: 0.01
-      metric:
+      targetMetric:
         name: confidence
         minimum: 0.1
       numberOfRulesToFind: -1
+      output: string
 repository: asd
 imports: asd
-output: xp
