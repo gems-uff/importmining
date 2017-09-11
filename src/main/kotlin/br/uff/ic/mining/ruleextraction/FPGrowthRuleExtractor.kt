@@ -1,5 +1,6 @@
 package br.uff.ic.mining.ruleextraction
 
+import weka.associations.FPGrowth
 import weka.core.Instances
 
 class FPGrowthRuleExtractor(
@@ -11,6 +12,10 @@ class FPGrowthRuleExtractor(
         val numberOfRulesToFind: Int
 ) : RuleExtractor {
     override fun extract(dataSet: Instances) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val fpg = FPGrowth()
+        fpg.numRulesToFind = numberOfRulesToFind
+        fpg.minMetric = minimumTargetMetricValue
+        fpg.lowerBoundMinSupport = minimumSupport
+
     }
 }
