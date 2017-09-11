@@ -6,9 +6,10 @@ import br.uff.ic.collector.Project
 import br.uff.ic.io.deleteOnShutdown
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
-import br.uff.ic.mining.WekaFeatureSelection
-import br.uff.ic.mining.WekaRulerExtractor
+import br.uff.ic.mining.featureselection.PipelineFeatureSelector
+import br.uff.ic.mining.ruleextraction.FPGrowthRuleExtractor
 import br.uff.ic.vcs.JGit
+import br.uff.ic.vcs.SystemGit
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
 import java.io.File
@@ -40,7 +41,7 @@ object ImportMining {
                         "d",
                         "repository-directory",
                         true,
-                        """The UNIX-like repository absolute path. i. e. '/path/to/repo'. Use this if you want to use a repository that is already been cloned.  Specify this OR the 'repository' option"""
+                        """The UNIX-like repository absolute path. i. e. '/path/to/repo'. Use this if you want to use a repository that has already been cloned.  Specify this OR the 'repository' option"""
                     )
                 )
                 group.addOption(
@@ -48,7 +49,7 @@ object ImportMining {
                         "i",
                         "input",
                         true,
-                        """The UNIX-like csv absolute path. i. e. '/path/to/repcsv'. Use this if you want to use a CSV generate on a previous execution."""
+                        """The UNIX-like csv absolute path. i. e. '/path/to/repcsv'. Use this if you want to use a CSV file generated on a previous execution."""
                     )
                 )
                 group
@@ -86,7 +87,7 @@ object ImportMining {
     private fun process(cmd: CommandLine) {
         runBlocking {
             val output = File(cmd.getOptionValue("input"))
-            WekaRulerExtractor(WekaFeatureSelection()).extract(output.absolutePath)
+            //WekaRulerExtractor(WekaFeatureSelection()).extract(output.absolutePath)
         }
     }
 
@@ -98,7 +99,7 @@ object ImportMining {
                 setReadable(true, true)
                 setWritable(true, true)
                 if (!exists()) {
-                    error("Could not new directory")
+                    error("Could not create new directory")
                 }
                 this
             }
@@ -119,6 +120,6 @@ object ImportMining {
 
 fun main(args: Array<String>) {
     ImportMining.execute(
-        "-op process -i out.csv -o out.json".split(" ").toTypedArray()
+        "-op collect -r mpjmuniz/pspa-gcp -o out.json".split(" ").toTypedArray()
     )
 }
