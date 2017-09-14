@@ -87,6 +87,7 @@ object ImportMining {
     private fun process(cmd: CommandLine) {
         runBlocking {
             val output = File(cmd.getOptionValue("input"))
+
             //WekaRulerExtractor(WekaFeatureSelection()).extract(output.absolutePath)
         }
     }

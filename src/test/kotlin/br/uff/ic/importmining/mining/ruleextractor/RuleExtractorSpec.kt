@@ -31,7 +31,7 @@ object RuleExtractorSpec : Spek({
                         )
                 )
                 val extractor = RuleExtractor.new(spec)
-                it("should return a MultipleAlgorithmRuleExtractor with exact one algorithm") {
+                it("should return a MultipleAlgorithmRuleExtractor with exactly one algorithm") {
                     extractor `should be instance of` MultipleAlgorithmRuleExtractor::class
                     extractor as MultipleAlgorithmRuleExtractor
                     extractor.numberOfAlgorithms `should equal` 1
