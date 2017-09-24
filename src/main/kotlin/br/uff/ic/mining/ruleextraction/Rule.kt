@@ -4,7 +4,8 @@ data class Rule(
         val premises: List<String>,
         val consequent: String,
         val support: Double,
-        val leverage: Double,
+        val coverage: Double,
         val confidence: Double,
-        val conviction: Double
+        val conviction: Double,
+        val lift: Double
 )

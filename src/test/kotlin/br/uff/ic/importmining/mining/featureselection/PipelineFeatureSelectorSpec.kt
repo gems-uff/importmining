@@ -1,7 +1,6 @@
 package br.uff.ic.importmining.mining.featureselection
 
-import br.uff.ic.mining.featureselection.FeatureSelector
-import br.uff.ic.mining.featureselection.PipelineFeatureSelector
+import br.uff.ic.mining.featureselection.Filter
 import com.nhaarman.mockito_kotlin.verify
 import org.amshove.kluent.*
 import org.jetbrains.spek.api.Spek
@@ -13,7 +12,7 @@ object PipelineFeatureSelectorSpec : Spek({
     given("a PipelineFeatureSelector") {
         on("calling #select") {
             val newSelector = {
-                val selector = mock<FeatureSelector>()
+                val selector = mock<Filter>()
                 When calling selector.select(any()) `it returns` mock()
                 selector
             }

@@ -1,7 +1,7 @@
 package br.uff.ic.collector
 
-import java.io.File
+import br.uff.ic.mining.featureselection.DataSet
 
 interface ImportCollector {
-    suspend fun collect(project: Project, output: File)
+    suspend fun collect(root: String): DataSet
 }

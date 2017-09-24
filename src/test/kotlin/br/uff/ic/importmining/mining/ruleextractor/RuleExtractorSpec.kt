@@ -1,9 +1,7 @@
 package br.uff.ic.importmining.mining.ruleextractor
 
-import br.uff.ic.mining.ruleextraction.MultipleAlgorithmRuleExtractor
 import br.uff.ic.mining.ruleextraction.RuleExtractor
 import org.amshove.kluent.`should be instance of`
-import org.amshove.kluent.`should equal`
 import org.amshove.kluent.`should throw`
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context

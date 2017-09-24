@@ -1,7 +1,10 @@
 package br.uff.ic.collector
 
+import br.uff.ic.extensions.javaFiles
+import br.uff.ic.extensions.mainPackage
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
+import br.uff.ic.mining.featureselection.DataSet
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
@@ -11,12 +14,13 @@ import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.io.FileInputStream
 
-class ExplicitImportCollector(private val outputChannel: OutputChannel) : ImportCollector {
+class ExplicitImportCollector: ImportCollector {
     private companion object : Logger by LoggerFactory.new(ExplicitImportCollector::class.java.canonicalName)
 
-    suspend override fun collect(project: Project, output: File) {
-        info("Collecting imports of ${project.mainPackage}")
+    suspend override fun collect(root: String): DataSet {
+        info("Collecting imports of $root")
         val fileImportsChannel = Channel<FileImports>()
+        val project = File(root)
         project.javaFiles.forEach {
             collect(it, fileImportsChannel)
         }
@@ -29,10 +33,15 @@ class ExplicitImportCollector(private val outputChannel: OutputChannel) : Import
             debug("Collected ${localImports.size} imports.")
         }
         info("Finished collect of imports, ${localImports.size} imports where collected")
+        val sortedLocalImports = localImports.sorted()
         val importPerFile = fileImports.map {
-            it.copy(imports = it.imports.intersect(localImports).toList().filter { it.isNotEmpty() })
-        }.filter { it.imports.isNotEmpty() }
-        outputChannel.save(project, importPerFile, output)
+            it.file to it.imports.filter {
+                sortedLocalImports.contains(it)
+            }.map {
+                sortedLocalImports.indexOf(it)
+            }
+        }
+        return DataSet(sortedLocalImports, importPerFile)
 
     }
 

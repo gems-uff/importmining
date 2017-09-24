@@ -1,9 +1,6 @@
 package br.uff.ic.importmining.mining.featureselection
 
-import br.uff.ic.mining.featureselection.FeatureSelector
-import br.uff.ic.mining.featureselection.PipelineFeatureSelector
-import org.amshove.kluent.`should be instance of`
-import org.amshove.kluent.`should equal`
+import br.uff.ic.mining.featureselection.Filter
 import org.amshove.kluent.`should throw`
 import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.context
@@ -12,7 +9,7 @@ import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.api.dsl.on
 
 object FeatureSelectorSpec : Spek({
-    given("the FeatureSelector") {
+    given("the Filter") {
         context("trying to create the AttributeRemover") {
             on("calling #new with a valid specification") {
                 val spec = listOf<Any>(
@@ -24,7 +21,7 @@ object FeatureSelectorSpec : Spek({
                                 )
                         )
                 )
-                val selector = FeatureSelector.new(spec)
+                val selector = Filter.new(spec)
                 it("should return a PipelineFeatureSelector with exact one step") {
                     selector `should be instance of` PipelineFeatureSelector::class
                     selector as PipelineFeatureSelector
@@ -41,7 +38,7 @@ object FeatureSelectorSpec : Spek({
                                 )
                         )
                 )
-                val new = { FeatureSelector.new(spec) }
+                val new = { Filter.new(spec) }
                 it("should throw a Exception") {
                     new `should throw` RuntimeException::class
                 }
@@ -58,7 +55,7 @@ object FeatureSelectorSpec : Spek({
                                 )
                         )
                 )
-                val selector = FeatureSelector.new(spec)
+                val selector = Filter.new(spec)
                 it("should return a PipelineFeatureSelector with exact one step") {
                     selector `should be instance of` PipelineFeatureSelector::class
                     selector as PipelineFeatureSelector
@@ -75,20 +72,20 @@ object FeatureSelectorSpec : Spek({
                                 )
                         )
                 )
-                val new = { FeatureSelector.new(spec) }
+                val new = { Filter.new(spec) }
                 it("should throw a Exception") {
                     new `should throw` RuntimeException::class
                 }
             }
         }
-        context("trying to create a non-existing FeatureSelector") {
+        context("trying to create a non-existing Filter") {
             on("calling #new with a invalid specification") {
                 val spec = listOf<Any>(
                         mapOf<Any, Any>(
                                 "NonExistingFeatureSelector" to ""
                         )
                 )
-                val new = { FeatureSelector.new(spec) }
+                val new = { Filter.new(spec) }
                 it("should throw a Exception") {
                     new `should throw` RuntimeException::class
                 }

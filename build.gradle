@@ -26,6 +26,7 @@ mainClassName = "br.uff.ic.ImportMiningKt"
 repositories {
     mavenCentral()
     maven { url "http://dl.bintray.com/jetbrains/spek" }
+    maven { url 'https://jitpack.io' }
     jcenter()
 }
 
@@ -38,7 +39,8 @@ def versions = [
     kluent    : '1.28',
     javaparser: '3.3.2',
     weka      : '3.8.1',
-    commonscli: '1.4'
+    commonscli: '1.4',
+    spmf: '1.0.0'
 ]
 
 def libraries = [
@@ -56,7 +58,8 @@ def libraries = [
         "org.eclipse.jgit:org.eclipse.jgit:${versions.jgit}"
     ],
     mining    : [
-        "nz.ac.waikato.cms.weka:weka-stable:${versions.weka}"
+        "nz.ac.waikato.cms.weka:weka-stable:${versions.weka}",
+        "com.github.mralves:spmf:${versions.spmf}"
     ],
     parser        : [
         "com.github.javaparser:javaparser-core:${versions.javaparser}"
