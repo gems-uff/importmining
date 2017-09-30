@@ -1,9 +1,7 @@
-package br.uff.ic.mining.ruleextraction
-
-import br.uff.ic.mining.DataSet
+package br.uff.ic.mining
 
 interface RuleExtractor {
-    fun extract(dataSet: DataSet): Set<Rule>
+    fun extract(dataSet: DataSet): List<Rule>
 }
 
 

@@ -1,16 +1,14 @@
-package br.uff.ic.mining.featureselection
+package br.uff.ic.mining
 
 data class DataSet(
         val header: List<String>,
-        val data: List<Pair<String, List<Int>>>
+        val data: List<Row>
 ) {
-    override fun toString(): String {
-        return data.joinToString("\n") { (_, imports) ->
-            imports.joinToString(" ")
-        }
-    }
 
-    fun deleteAttribute(attribute: String) {
-
+    fun supportOf(set: Set<String>): Double {
+        return data.filter { (_, row) ->
+            row.containsAll(set)
+        }.size.toDouble() / data.size
     }
 }
+

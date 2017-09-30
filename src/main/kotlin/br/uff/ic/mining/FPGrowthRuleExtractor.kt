@@ -1,35 +1,41 @@
-package br.uff.ic.mining.ruleextraction
+package br.uff.ic.mining
 
-import br.uff.ic.extensions.deleteOnShutdown
-import br.uff.ic.mining.DataSet
-import ca.pfv.spmf.algorithms.associationrules.agrawal94_association_rules.AlgoAgrawalFaster94
-import ca.pfv.spmf.algorithms.frequentpatterns.apriori.AlgoApriori
-import java.nio.file.Files
+import org.apache.spark.mllib.fpm.FPGrowth
+import org.apache.spark.mllib.fpm.FPGrowthModel
+import toRDD
 
 class FPGrowthRuleExtractor(
         private val minimumSupport: Double,
-        private val minimumConfidence: Double,
-        private val minimumLift: Double
+        private val minimumConfidence: Double
 ) : RuleExtractor {
-    override fun extract(dataSet: DataSet): Set<Rule> {
-        val apriori = AlgoApriori()
-        val temp = Files.createTempFile("", "temp")
-        temp.toFile().deleteOnShutdown()
-        Files.write(temp, dataSet.toString().toByteArray())
-        val itemSets = apriori.runAlgorithm(minimumSupport, temp.toAbsolutePath().toString(), null)
-        val agrawal = AlgoAgrawalFaster94()
-        val rules = agrawal.runAlgorithm(itemSets, null, apriori.databaseSize, minimumConfidence, minimumLift)
-        rules.rules.map { rule ->
-            rule.itemset2.map { consequent ->
-                Rule(
-                        premises = rule.itemset1.map { dataSet.header[it] },
-                        consequent = dataSet.header[consequent],
-                        confidence = rule.confidence,
-                        lift = rule.lift,
-                        support = (rule.absoluteSupport.toDouble() / apriori.databaseSize.toDouble()),
-                        coverage = rule.coverage.toDouble()
-                )
-            }
+    override fun extract(dataSet: DataSet): List<Rule> {
+
+        val algorithm = FPGrowth()
+        algorithm.setMinSupport(minimumSupport)
+        algorithm.setNumPartitions(10)
+        val sets: FPGrowthModel<String> = algorithm.run(dataSet.toRDD())
+        val rules = mutableListOf<Rule>()
+        for (rule in sets.generateAssociationRules(minimumConfidence).toLocalIterator().toIterable()) {
+            rules.add(Rule.fromSparkRule(rule, dataSet))
         }
+        return rules
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FPGrowthRuleExtractor
+
+        if (minimumSupport != other.minimumSupport) return false
+        if (minimumConfidence != other.minimumConfidence) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = minimumSupport.hashCode()
+        result = 31 * result + minimumConfidence.hashCode()
+        return result
     }
 }
