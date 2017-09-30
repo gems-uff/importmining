@@ -31,3 +31,5 @@ gradle/
 gradlew
 gradlew.bat
 *.csv
+trash/
+*.state

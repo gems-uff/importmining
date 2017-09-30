@@ -1,12 +1,12 @@
 package br.uff.ic.mining.ruleextraction
 
 import br.uff.ic.extensions.deleteOnShutdown
-import br.uff.ic.mining.featureselection.DataSet
+import br.uff.ic.mining.DataSet
 import ca.pfv.spmf.algorithms.associationrules.agrawal94_association_rules.AlgoAgrawalFaster94
 import ca.pfv.spmf.algorithms.frequentpatterns.apriori.AlgoApriori
 import java.nio.file.Files
 
-class AprioriRuleExtractor(
+class FPGrowthRuleExtractor(
         private val minimumSupport: Double,
         private val minimumConfidence: Double,
         private val minimumLift: Double
