@@ -4,7 +4,8 @@ import br.uff.ic.extensions.javaFiles
 import br.uff.ic.extensions.mainPackage
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
-import br.uff.ic.mining.featureselection.DataSet
+import br.uff.ic.mining.DataSet
+import br.uff.ic.mining.Row
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
@@ -14,7 +15,7 @@ import kotlinx.coroutines.experimental.launch
 import java.io.File
 import java.io.FileInputStream
 
-class ExplicitImportCollector: ImportCollector {
+class ExplicitImportCollector : ImportCollector {
     private companion object : Logger by LoggerFactory.new(ExplicitImportCollector::class.java.canonicalName)
 
     suspend override fun collect(root: String): DataSet {
@@ -35,11 +36,12 @@ class ExplicitImportCollector: ImportCollector {
         info("Finished collect of imports, ${localImports.size} imports where collected")
         val sortedLocalImports = localImports.sorted()
         val importPerFile = fileImports.map {
-            it.file to it.imports.filter {
-                sortedLocalImports.contains(it)
-            }.map {
-                sortedLocalImports.indexOf(it)
-            }
+            Row(
+                    it.file,
+                    it.imports.filter {
+                        sortedLocalImports.contains(it)
+                    }.toSet()
+            )
         }
         return DataSet(sortedLocalImports, importPerFile)
 
