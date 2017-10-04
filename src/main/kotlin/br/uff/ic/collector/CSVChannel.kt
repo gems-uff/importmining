@@ -6,10 +6,10 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 
-class CSVChannel(private val fieldSep: String = ",", private val lineSep: String = "\n") : OutputChannel {
+class CSVChannel(private val output: File, private val fieldSep: String = ",", private val lineSep: String = "\n") : OutputChannel {
     private companion object : Logger by LoggerFactory.new(CSVChannel::class.java.canonicalName)
 
-    override fun save(project: Project, imports: List<FileImports>, output: File) {
+    override fun save(project: Project, imports: List<FileImports>) {
         info("Trying to save the CSV on the file '${output.absolutePath}'")
         try {
             val writer = BufferedWriter(FileWriter(output))

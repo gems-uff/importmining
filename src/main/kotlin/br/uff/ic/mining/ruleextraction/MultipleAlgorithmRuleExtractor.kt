@@ -3,6 +3,7 @@ package br.uff.ic.mining.ruleextraction
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import weka.core.Instances
 
 class MultipleAlgorithmRuleExtractor(
@@ -12,13 +13,15 @@ class MultipleAlgorithmRuleExtractor(
     val numberOfAlgorithms: Int = extractors.size
 
     override fun extract(dataSet: Instances) {
-        val semaphore = Channel<Boolean>(numberOfWorks)
-        extractors.forEach { extractor ->
-            launch(CommonPool) {
-                semaphore.send(true)
-                extractor.extract(dataSet)
-                semaphore.receive()
-            }
+        runBlocking {
+            val semaphore = Channel<Boolean>(numberOfWorks)
+            extractors.map { extractor ->
+                launch(CommonPool) {
+                    semaphore.send(true)
+                    extractor.extract(dataSet)
+                    semaphore.receive()
+                }
+            }.forEach { it.join() }
         }
     }
 

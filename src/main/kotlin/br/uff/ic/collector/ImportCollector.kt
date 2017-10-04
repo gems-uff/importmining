@@ -1,7 +1,18 @@
 package br.uff.ic.collector
 
-import java.io.File
-
 interface ImportCollector {
-    suspend fun collect(project: Project, output: File)
+    companion object {
+        fun new(spec: Map<String, String>) : ImportCollector {
+            val output = spec["output"]
+            if (output == null) {
+                error("'Output' must be specified")
+            }
+            val channel = OutputChannel.new(output)
+            return ExplicitImportCollector(channel)
+
+
+        }
+    }
+
+    suspend fun collect(project: Project)
 }

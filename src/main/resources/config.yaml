@@ -1,4 +1,6 @@
-featureSelector:
+input:
+
+featureSelectors:
   - RemoveAttribute:
     - name
 ruleExtractor:

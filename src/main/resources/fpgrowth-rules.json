@@ -1,0 +1,13 @@
+[
+  {
+    "confidence": 0.56,
+    "conviction": 0.75,
+    "coverage": 0.25,
+    "lift": 0.45,
+    "set": [
+      "org.com.ClassA",
+      "org.com.ClassB"
+    ],
+    "support": 0.1
+  }
+]

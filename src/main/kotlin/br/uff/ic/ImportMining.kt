@@ -1,69 +1,90 @@
 package br.uff.ic
 
-import br.uff.ic.collector.CSVChannel
-import br.uff.ic.collector.ExplicitImportCollector
+import br.uff.ic.collector.ImportCollector
 import br.uff.ic.collector.Project
 import br.uff.ic.io.deleteOnShutdown
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
-import br.uff.ic.mining.featureselection.PipelineFeatureSelector
-import br.uff.ic.mining.ruleextraction.FPGrowthRuleExtractor
+import br.uff.ic.mining.featureselection.FeatureSelector
+import br.uff.ic.mining.ruleextraction.RuleExtractor
 import br.uff.ic.vcs.JGit
 import br.uff.ic.vcs.SystemGit
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.commons.cli.*
+import weka.core.converters.ArffLoader
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 import java.nio.file.Files
 
+data class ExperimentSpecification(
+    val featureSelectors: List<Any>?,
+    val ruleExtractors: Map<Any, Any>?,
+    val importCollector: Map<String, String>
+)
 
 object ImportMining {
+    @JvmStatic
+    @JvmName("main")
     fun execute(args: Array<String>) {
         LoggerFactory.addHandler(ConsoleHandler())
         val options = Options()
         with(options) {
-            addOption(
-                "op",
-                "operation",
-                true,
-                "Operation to be executed. Possible values are: collect, process, full"
-            )
-            addOptionGroup(OptionGroup().let { group ->
-                group.addOption(
-                    Option(
-                        "r",
-                        "repository",
-                        true,
-                        """The repository name on github. i. e. 'gems-uff/importmining'. Use this if you want to clone a repo. Specify this OR the 'repository-directory' option."""
-                    )
-                )
-                group.addOption(
-                    Option(
-                        "d",
-                        "repository-directory",
-                        true,
-                        """The UNIX-like repository absolute path. i. e. '/path/to/repo'. Use this if you want to use a repository that has already been cloned.  Specify this OR the 'repository' option"""
-                    )
-                )
-                group.addOption(
-                    Option(
-                        "i",
-                        "input",
-                        true,
-                        """The UNIX-like csv absolute path. i. e. '/path/to/repcsv'. Use this if you want to use a CSV file generated on a previous execution."""
-                    )
-                )
-                group
-            })
             addRequiredOption(
-                "o",
-                "output",
+                "es",
+                "experiment-specification",
                 true,
-                "The UNIX-like output absolute path."
+                "The path to the specification to the experiment. It must be UNIX-like."
             )
         }
         try {
             val parser = DefaultParser()
             val cmd: CommandLine = parser.parse(options, args)
+            with(BufferedReader(FileReader(cmd.getOptionValue("es")))) {
+                val json = readText()
+                val mapper = ObjectMapper().registerKotlinModule()
+                val spec = mapper.readValue<ExperimentSpecification>(json)
+                var repoDir = with(Files.createDirectory(File("temp${System.nanoTime()}").toPath()).toFile()) {
+                    deleteOnShutdown()
+                    setReadable(true, true)
+                    setWritable(true, true)
+                    if (!exists()) {
+                        error("Could not create new directory")
+                    }
+                    this
+                }
+                val preprocessed = spec.importCollector["preprocessed"]
+                val arff: String
+                if (preprocessed != null) {
+                    arff = preprocessed
+                } else {
+                    val url = spec.importCollector["url"]
+                    val name = spec.importCollector["name"]
+                    val path = spec.importCollector["path"]
+                    when {
+                        url != null -> SystemGit().clone(url, repoDir)
+                        name != null -> SystemGit().clone("https://github.com/$name.git", repoDir)
+                        path != null -> repoDir = File(path)
+                    }
+
+                    val collector = ImportCollector.new(spec.importCollector)
+                    runBlocking {
+                        collector.collect(Project(repoDir))
+                    }
+                    arff = spec.importCollector["output"]!!
+                }
+                if (spec.featureSelectors != null && spec.ruleExtractors != null){
+                    val selector = FeatureSelector.new(spec.featureSelectors)
+                    val extractor = RuleExtractor.new(spec.ruleExtractors)
+                    val instances = ArffLoader.ArffReader(BufferedReader(FileReader(arff))).data
+                    instances.setClassIndex(-1)
+                    extractor.extract(selector.select(instances))
+                }
+
+            }
             when (cmd.getOptionValue("op")) {
                 "collect" -> {
                     collect(cmd)
@@ -81,7 +102,24 @@ object ImportMining {
             println(e.message)
             e.printStackTrace()
         }
+    }
 
+    private fun analyze(expResult : List<String>) {
+        // Receaves a list as the process runs in a pipeline spitting more than one output as it goes
+        // In the end all of them should be grouped and passed here
+        runBlocking {
+            expResult.forEach {
+                with(BufferedReader(FileReader(it))) {
+                    val json = readText()
+                    val mapper = ObjectMapper().registerKotlinModule()
+                    val result : Array<Any>? = mapper.readValue(json)
+
+                    if (result != null && !result.isEmpty()) {
+                        // TODO: implement general result collection
+                    }
+                }
+            }
+        }
     }
 
     private fun process(cmd: CommandLine) {
@@ -90,6 +128,7 @@ object ImportMining {
 
             //WekaRulerExtractor(WekaFeatureSelection()).extract(output.absolutePath)
         }
+
     }
 
     private fun collect(cmd: CommandLine) {
@@ -112,7 +151,7 @@ object ImportMining {
         }
         val output = File(cmd.getOptionValue("output"))
         runBlocking {
-            ExplicitImportCollector(CSVChannel()).collect(Project(repoDir), output)
+            //            ExplicitImportCollector(CSVChannel()).collect(Project(repoDir), output)
         }
     }
 
@@ -121,6 +160,6 @@ object ImportMining {
 
 fun main(args: Array<String>) {
     ImportMining.execute(
-        "-op collect -r mpjmuniz/pspa-gcp -o out.json".split(" ").toTypedArray()
+            "-es /home/mralves/Projects/kotlin/importmining/src/main/resources/config.json".split(" ").toTypedArray()
     )
 }

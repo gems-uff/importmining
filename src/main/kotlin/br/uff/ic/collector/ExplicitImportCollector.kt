@@ -14,12 +14,13 @@ import java.io.FileInputStream
 class ExplicitImportCollector(private val outputChannel: OutputChannel) : ImportCollector {
     private companion object : Logger by LoggerFactory.new(ExplicitImportCollector::class.java.canonicalName)
 
-    suspend override fun collect(project: Project, output: File) {
+    suspend override fun collect(project: Project) {
         info("Collecting imports of ${project.mainPackage}")
         val fileImportsChannel = Channel<FileImports>()
         project.javaFiles.forEach {
             collect(it, fileImportsChannel)
         }
+
         val fileImports = mutableListOf<FileImports>()
         val localImports = mutableSetOf<String>()
         (1..project.javaFiles.size).forEach {
@@ -32,7 +33,7 @@ class ExplicitImportCollector(private val outputChannel: OutputChannel) : Import
         val importPerFile = fileImports.map {
             it.copy(imports = it.imports.intersect(localImports).toList().filter { it.isNotEmpty() })
         }.filter { it.imports.isNotEmpty() }
-        outputChannel.save(project, importPerFile, output)
+        outputChannel.save(project, importPerFile)
 
     }
 
