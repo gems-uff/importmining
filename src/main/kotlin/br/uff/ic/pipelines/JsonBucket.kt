@@ -28,5 +28,5 @@ class JsonBucket(
         }
     }
 
-    private fun String.toPath() = FileSystems.getDefault().getPath(directory.toString(), "$this.state")
+    private fun String.toPath() = FileSystems.getDefault().getPath(directory.toString(), "$this-state.json")
 }

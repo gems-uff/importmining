@@ -39,15 +39,26 @@ private class PackageVisitor : VoidVisitorAdapter<Void>() {
     }
 }
 
+
 val File.mainPackage: String
     get() {
-        return this.javaFiles.map {
-            val v = PackageVisitor()
-            val input = FileInputStream(it)
-            val cu = JavaParser.parse(input)
-            v.visit(cu, null)
-            v.packageName
-        }.filter { it.isNotEmpty() }.min()!!
+        val notAPackage = this.absolutePath.replace("\\", ".")
+        return this.javaFiles.parallelStream().map {
+            try {
+                val v = PackageVisitor()
+                val input = FileInputStream(it)
+                val cu = JavaParser.parse(input)
+                v.visit(cu, null)
+                v.packageName
+            } catch (e: Exception) {
+                println("File -> ${this.absolutePath} deu erro")
+                ""
+            }
+        }.filter {
+            it.isNotEmpty() && notAPackage.contains(it)
+        }.min { a, b ->
+            a.compareTo(b)
+        }.orElse("")
     }
 
 val File.javaFiles: Set<String>
