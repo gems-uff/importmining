@@ -1,11 +1,12 @@
 package br.uff.ic.pipelines
 
 import br.uff.ic.collector.ImportCollector
-import br.uff.ic.mining.Knowledge
+import br.uff.ic.extensions.load
+import br.uff.ic.extensions.toBase64
+import br.uff.ic.mining.Rule
 import br.uff.ic.mining.RuleExtractor
 import br.uff.ic.vcs.VCS
 import kotlinx.coroutines.experimental.runBlocking
-import java.util.*
 
 
 class ExtractRulesPipeline(
@@ -13,10 +14,10 @@ class ExtractRulesPipeline(
         private val collector: ImportCollector,
         private val extractor: RuleExtractor,
         checkpoints: Bucket
-) : Pipeline<String, Knowledge>(
+) : Pipeline<String, Iterable<Rule>>(
         checkpoints
 ) {
-    override fun execute(input: String): Knowledge {
+    override fun execute(input: String): Iterable<Rule> {
         println("cloning")
         val src = load("${input.toBase64()}-cloned-project-path") {
             vcs.clone(input).absolutePath
@@ -32,9 +33,5 @@ class ExtractRulesPipeline(
             extractor.extract(dataSet)
         }
     }
-}
-
-fun Any.toBase64(): String {
-    return Base64.getEncoder().encodeToString(this.hashCode().toString().toByteArray())
 }
 

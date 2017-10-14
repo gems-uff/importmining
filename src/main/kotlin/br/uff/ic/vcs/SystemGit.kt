@@ -11,7 +11,7 @@ class SystemGit(private val directory: File): VCS {
         directory.deleteRecursively()
         info("Cloning the repository")
         val rt = Runtime.getRuntime()
-        val cmd = "git clone $uri ${directory.absolutePath}"
+        val cmd = "git clone --depth=1 $uri ${directory.absolutePath}"
         debug("Running the following command: $cmd")
         val pr = rt.exec(cmd)
         val status = pr.waitFor()

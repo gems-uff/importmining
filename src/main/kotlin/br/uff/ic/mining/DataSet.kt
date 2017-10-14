@@ -1,8 +1,8 @@
 package br.uff.ic.mining
 
 data class DataSet(
-        val header: List<String>,
-        val data: List<Row>
+    val header: List<String>,
+    val data: Collection<Row>
 ) {
 
     fun supportOf(set: Set<String>): Double {

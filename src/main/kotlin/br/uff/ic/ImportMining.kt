@@ -21,8 +21,8 @@ object ImportMining {
 
     init {
         val sparkConf = SparkConf()
-                .setAppName("SOME APP NAME")
-                .setMaster("local[2]")
+            .setAppName("ImportMining")
+            .setMaster("local[8]")
                 .set("spark.executor.memory", "1g")
         sparkContext = JavaSparkContext(sparkConf)
     }
@@ -31,14 +31,14 @@ object ImportMining {
     @JvmStatic
     fun main(args: Array<String>) {
         LoggerFactory.addHandler(ConsoleHandler())
-        val vcs = SystemGit(File("/home/mralves/Projects/kotlin/import-mining/trash"))
+        val vcs = SystemGit(File("/home/mralves/Projects/kotlin/importmining/trash"))
         val collector = ExplicitImportCollector()
         val extractor = FPGrowthRuleExtractor(
-            0.01,
+            0.05,
             0.1
         )
         val bucket = JsonBucket(
-                "/home/mralves/Projects/kotlin/import-mining/src/main/resources",
+            "/home/mralves/Projects/kotlin/importmining/src/main/resources",
                 ObjectMapper().registerKotlinModule()
         )
         val pipeline = ExtractRulesPipeline(vcs, collector, extractor, bucket)

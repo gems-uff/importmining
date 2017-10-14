@@ -15,6 +15,8 @@ data class Rule(
     val lift: Double,
     val instances: List<String>
 ) {
+    val items: List<String> = premises + consequent
+
     companion object {
         fun fromSparkRule(rule: AssociationRules.Rule<String>, dataSet: DataSet): Rule {
             val premises = rule.javaAntecedent().toList()
@@ -23,9 +25,9 @@ data class Rule(
             return Rule(
                 premises = premises,
                 consequent = consequent,
-                    confidence = rule.confidence(),
-                    lift = rule.lift(dataSet),
-                    support = rule.support(dataSet),
+                confidence = rule.confidence(),
+                lift = rule.lift(dataSet),
+                support = rule.support(dataSet),
                 conviction = rule.conviction(dataSet),
                 instances = dataSet.data.parallelStream().filter {
                     it.set.containsAll(items)
