@@ -1,0 +1,27 @@
+@relation output
+@attribute name string
+@attribute org.apache.commons.cli.AmbiguousOptionException string
+@attribute org.apache.commons.cli.CommandLine string
+@attribute org.apache.commons.cli.CommandLineParser string
+@attribute org.apache.commons.cli.DefaultParser string
+@attribute org.apache.commons.cli.GnuParser string
+@attribute org.apache.commons.cli.HelpFormatter string
+@attribute org.apache.commons.cli.MissingArgumentException string
+@attribute org.apache.commons.cli.Option string
+@attribute org.apache.commons.cli.OptionBuilder string
+@attribute org.apache.commons.cli.OptionGroup string
+@attribute org.apache.commons.cli.Options string
+@attribute org.apache.commons.cli.ParseException string
+@attribute org.apache.commons.cli.Parser string
+@attribute org.apache.commons.cli.PosixParser string
+@data
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI133Test.java",2 1,8 1,11 1,12 1,14 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI252Test.java",1 1,4 1,8 1,11 1,12 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI265Test.java",2 1,4 1,8 1,11 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI13Test.java",2 1,8 1,9 1,11 1,12 1,14 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI71Test.java",2 1,3 1,7 1,8 1,11 1,14 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI148Test.java",2 1,3 1,9 1,11 1,14 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI266Test.java",6 1,8 1,10 1,11 1,12 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI18Test.java",6 1,8 1,11 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugsTest.java",2 1,3 1,5 1,6 1,7 1,8 1,9 1,10 1,11 1,12 1,13 1,14 1}
+{0 "/home/mralves/Projects/kotlin/importmining/temp5343329855820/src/test/java/org/apache/commons/cli/bug/BugCLI162Test.java",6 1,8 1,10 1,11 1}

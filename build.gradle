@@ -88,8 +88,8 @@ dependencies {
 
 build {
     doLast {
-        new File('src/test/resources/mockito-extensions').mkdirs()
-        def mockMaker = new File('src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker')
+        new File('src/test/resources/mockito-br.uff.ic.extensions').mkdirs()
+        def mockMaker = new File('src/test/resources/mockito-br.uff.ic.extensions/org.mockito.plugins.MockMaker')
         mockMaker.text = 'mock-maker-inline'
     }
 }
