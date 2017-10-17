@@ -17,7 +17,6 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-*.class
 *.log
 *.ctxt
 .mtj.tmp/
@@ -32,3 +31,5 @@ gradle/
 gradlew
 gradlew.bat
 *.csv
+trash/
+*.state

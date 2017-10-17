@@ -2,14 +2,12 @@ group 'br.uff.ic'
 version '1.0.0'
 
 buildscript {
-    ext.kotlin_version = '1.1.4-3'
-
     repositories {
         mavenCentral()
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.51'
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
     }
 }
@@ -17,6 +15,7 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'application'
+apply plugin: 'scala'
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 sourceCompatibility = 1.8
@@ -26,19 +25,20 @@ mainClassName = "br.uff.ic.ImportMiningKt"
 repositories {
     mavenCentral()
     maven { url "http://dl.bintray.com/jetbrains/spek" }
+    maven { url 'https://jitpack.io' }
     jcenter()
 }
 
 def versions = [
     kotlin    : '1.1.4-3',
     coroutines: '0.18',
-    jackson   : '2.8.9',
+    jackson   : '2.6.7',
     spek      : '1.1.4',
     jgit      : '4.8.0.201706111038-r',
     kluent    : '1.28',
     javaparser: '3.3.2',
-    weka      : '3.8.1',
-    commonscli: '1.4'
+    commonscli: '1.4',
+    spark : '2.2.0'
 ]
 
 def libraries = [
@@ -55,8 +55,9 @@ def libraries = [
     vcs           : [
         "org.eclipse.jgit:org.eclipse.jgit:${versions.jgit}"
     ],
-    mining    : [
-        "nz.ac.waikato.cms.weka:weka-stable:${versions.weka}"
+    mining        : [
+        "org.apache.spark:spark-mllib_2.11:${versions.spark}",
+        "org.apache.spark:spark-core_2.11:${versions.spark}"
     ],
     parser        : [
         "com.github.javaparser:javaparser-core:${versions.javaparser}"
