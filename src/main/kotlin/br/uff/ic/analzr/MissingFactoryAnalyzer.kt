@@ -12,7 +12,7 @@ import java.io.FileInputStream
 import java.io.IOException
 
 
-class MissingFactoryAnalyzer {
+class MissingFactoryAnalyzer : Analyzer{
     private companion object : Logger by LoggerFactory.new(MissingFactoryAnalyzer::class.java.canonicalName)
 
     /**
@@ -21,7 +21,7 @@ class MissingFactoryAnalyzer {
      *
      * A -> B, where A is an interface and B is a class implementing this interface
      */
-    fun analyze(r: Rule, projectRoot: String): Boolean {
+    override fun analyze(r: Rule, projectRoot: String): Boolean {
 
         info("Analyzing rule for missing factories")
 
