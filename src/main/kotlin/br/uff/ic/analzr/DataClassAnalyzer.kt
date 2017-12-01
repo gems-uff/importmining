@@ -13,7 +13,7 @@ import com.github.javaparser.ast.type.Type
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import java.io.FileInputStream
 
-class DataClassAnalyzer : Analyzer {
+class DataClassAnalyzer : Analyzer<Rule> {
     private companion object : Logger by LoggerFactory.new(DataClassAnalyzer::class.java.canonicalName)
 
     /**
@@ -72,7 +72,7 @@ private class MethodVisitor(val candidates: MutableCollection<String>,
         }
 
         when(md.nameAsString){
-            "equals", "toString" -> return
+            "equals", "toString", "hashCode" -> return
         }
 
         if(md.nameAsString.contains("PropertyChangeListener")) return
