@@ -11,11 +11,11 @@ class MissingFactoryAnalyzerTest {
 
     @Test
     fun shouldBeTrue() {
-        Assert.assertTrue(MissingFactoryAnalyzer().analyze(Rule(listOf("org.pspa.gcp.visao.adaptadores.Adaptador"), listOf("org.pspa.gcp.visao.adaptadores.EntradaBooleanos", "org.pspa.gcp.visao.adaptadores.EntradaDatas"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(MissingFactoryAnalyzer().analyze(listOf(Rule(listOf("org.pspa.gcp.visao.adaptadores.Adaptador"), listOf("org.pspa.gcp.visao.adaptadores.EntradaBooleanos", "org.pspa.gcp.visao.adaptadores.EntradaDatas"), 1.0, 1.0, 1.0, 1.0, listOf())), projectRoot))
     }
 
     @Test
     fun shouldBeFalse() {
-        Assert.assertFalse(MissingFactoryAnalyzer().analyze(Rule(listOf("org.pspa.gcp.visao.adaptadores.Adaptador"), listOf("javafx.scene.Node", "javafx.scene.layout.GridPane"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertFalse(MissingFactoryAnalyzer().analyze(listOf(Rule(listOf("org.pspa.gcp.visao.adaptadores.Adaptador"), listOf("javafx.scene.Node", "javafx.scene.layout.GridPane"), 1.0, 1.0, 1.0, 1.0, listOf())), projectRoot))
     }
 }
