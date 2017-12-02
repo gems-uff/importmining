@@ -10,31 +10,31 @@ class DataClassAnalyzerTest {
 
     @Test
     fun pureDataClassTest() {
-        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.PureDataClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.PureDataClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 
     @Test
     fun dataClassWithEqualsTest() {
-        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithEquals"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithEquals"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 
     @Test
     fun dataClassWithToStringTest() {
-        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithToString"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithToString"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 
     @Test
     fun dataClassWithPropertyChangeListenerTest() {
-        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithPropertyChangeListener"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.DataClassWithPropertyChangeListener"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 
     @Test
     fun normalClassTest() {
-        Assert.assertFalse(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.NormalClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertFalse(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.NormalClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 
     @Test
     fun dependencyAsCollectionTest() {
-        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.PureDataClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot))
+        Assert.assertTrue(DataClassAnalyzer().analyze(Rule(listOf("br.uff.ic.analzr.testclasses.NormalClass"), listOf("br.uff.ic.analzr.testclasses.PureDataClass"), 1.0, 1.0, 1.0, 1.0, listOf()), projectRoot) != null)
     }
 }

@@ -1,8 +1,5 @@
 package br.uff.ic.analzr
 
-import br.uff.ic.mining.Rule
-
-
-interface Analyzer<in E> {
-    fun analyze(evidence : E, projectRoot : String) : Boolean
+interface Analyzer<in R, out E> {
+    fun analyze(basis : R, projectRoot : String) : E?
 }

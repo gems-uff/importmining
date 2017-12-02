@@ -7,17 +7,18 @@ import java.io.File
 
 class JGit(private val directory: File) : VCS {
 
-    //private companion object : Logger by LoggerFactory.new(JGit::class.java.canonicalName)
+    private companion object : Logger by LoggerFactory.new(JGit::class.java.canonicalName)
 
     override fun clone(uri: String): File {
-        //info("Cloning the repository")
+        info("Cloning the repository")
         try {
+            directory.deleteRecursively()
             Git.cloneRepository()
                 .setURI(uri)
                 .setDirectory(directory)
                 .call()
         } catch (e: Exception) {
-            //error("Could not clone the repository: $uri. Status=${e.message}")
+            error("Could not clone the repository: $uri. Status=${e.message}")
             throw Exception("Could not clone the repository: $uri. Status=${e.message}")
         }
         return directory

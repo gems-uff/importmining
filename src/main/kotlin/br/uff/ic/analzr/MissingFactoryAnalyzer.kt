@@ -5,29 +5,28 @@ import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.Rule
 import com.github.javaparser.JavaParser
-import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.visitor.GenericVisitorAdapter
 import java.io.FileInputStream
 import java.io.IOException
 
 
-class MissingFactoryAnalyzer : Analyzer<Iterable<Rule>>{
+class MissingFactoryAnalyzer : Analyzer<Iterable<Rule>, Iterable<Evidence>>{
     private companion object : Logger by LoggerFactory.new(MissingFactoryAnalyzer::class.java.canonicalName)
 
     /**
-     *  Analyzes the project's generated rules for evidence on a missing factory, based on the ocurrence of the following rule:
+     *  Analyzes the project's generated rules for basis on a missing factory, based on the ocurrence of the following rule:
      *
      *
      * A -> B, where A is an interface and B is a class implementing this interface
      */
-    override fun analyze(evidence : Iterable<Rule>, projectRoot: String): Boolean {
+    override fun analyze(basis: Iterable<Rule>, projectRoot: String): Iterable<Evidence> {
 
         info("Analyzing rule for missing factories")
 
         val classes = mutableListOf<String>()
-        val trackedEvidence = evidence.map { UsedRuleTracker(evidence.indexOf(it), it,null) }
-                                      .sortedBy { it.id }
+        val trackedEvidence = basis.map { UsedRuleTracker(basis.indexOf(it), it,null) }
+                                   .sortedBy { it.id }
 
         val classesToScan = trackedEvidence.flatMap { it.r.items }
                                            .distinct()
@@ -50,7 +49,7 @@ class MissingFactoryAnalyzer : Analyzer<Iterable<Rule>>{
                         if(implementedTypes.size > 0) {
                             trackedEvidence[it].hasImplementingInformation = trackedEvidence[it].r.consequent.any {
 
-                                return ImplementingClassVisitor(implementedTypes, classes)
+                                ImplementingClassVisitor(implementedTypes, classes)
                                             .visit(JavaParser.parse(FileInputStream(it.getJavaClassFile(projectRoot))), null)
                             }
                         }
@@ -63,7 +62,9 @@ class MissingFactoryAnalyzer : Analyzer<Iterable<Rule>>{
             error(e.message!!.substringAfter(':', e.message!!))
         }
 
-        return classes.isNotEmpty()
+        return if(classes.isNotEmpty()) classes.map {
+            Evidence("Missing Factory", basis.filter { r -> r.items.contains(it) }, listOf(it))
+        } else listOf()
     }
 }
 
