@@ -1,3 +1,4 @@
+import br.uff.ic.analzr.ExtractEvidencesPipeline
 import br.uff.ic.collector.ExplicitImportCollector
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
@@ -42,9 +43,12 @@ object ImportMining {
                 ObjectMapper().registerKotlinModule()
         )
         val pipeline = ExtractRulesPipeline(vcs, collector, extractor, bucket)
+        val analysisPipeline = ExtractEvidencesPipeline(bucket)
+
         val time = measureTimeMillis {
-            pipeline.execute("https://github.com/hibernate/hibernate-orm")
+            analysisPipeline.execute(pipeline.execute("https://github.com/hibernate/hibernate-orm"))
         }
+
         println("${time.toDouble() / 1000}")
 
     }
