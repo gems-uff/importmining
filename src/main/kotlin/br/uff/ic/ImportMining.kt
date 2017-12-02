@@ -1,10 +1,9 @@
-import br.uff.ic.analzr.ExtractEvidencesPipeline
 import br.uff.ic.collector.ExplicitImportCollector
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.DataSet
 import br.uff.ic.mining.FPGrowthRuleExtractor
-import br.uff.ic.pipelines.ExtractRulesPipeline
+import br.uff.ic.pipelines.AnalyzeProjectPipeline
 import br.uff.ic.pipelines.JsonBucket
 import br.uff.ic.vcs.SystemGit
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -42,11 +41,10 @@ object ImportMining {
             "/home/mralves/Projects/kotlin/importmining/src/main/resources",
                 ObjectMapper().registerKotlinModule()
         )
-        val pipeline = ExtractRulesPipeline(vcs, collector, extractor, bucket)
-        val analysisPipeline = ExtractEvidencesPipeline(bucket)
+        val pipeline = AnalyzeProjectPipeline(vcs, collector, extractor, bucket)
 
         val time = measureTimeMillis {
-            analysisPipeline.execute(pipeline.execute("https://github.com/hibernate/hibernate-orm"))
+            pipeline.execute("https://github.com/hibernate/hibernate-orm")
         }
 
         println("${time.toDouble() / 1000}")
