@@ -12,6 +12,7 @@ class JGit(private val directory: File) : VCS {
     override fun clone(uri: String): File {
         info("Cloning the repository")
         try {
+            directory.deleteRecursively()
             Git.cloneRepository()
                 .setURI(uri)
                 .setDirectory(directory)
