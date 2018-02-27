@@ -12,7 +12,7 @@ import java.io.IOException
 
 
 class MissingFactoryAnalyzer : Analyzer<Iterable<Rule>, Iterable<Evidence>>{
-    private companion object : Logger by LoggerFactory.new(MissingFactoryAnalyzer::class.java.canonicalName)
+    private companion object : Logger by LoggerFactory.new(MissingFactoryAnalyzer::class.java)
 
     /**
      *  Analyzes the project's generated rules for basis on a missing factory, based on the ocurrence of the following rule:

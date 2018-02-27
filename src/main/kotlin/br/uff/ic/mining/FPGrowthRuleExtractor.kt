@@ -2,14 +2,13 @@ package br.uff.ic.mining
 
 import org.apache.spark.mllib.fpm.FPGrowth
 import org.apache.spark.mllib.fpm.FPGrowthModel
-import toRDD
 
 
 class FPGrowthRuleExtractor(
     private val minimumSupport: Double,
     private val minimumConfidence: Double
 ) : RuleExtractor {
-    override fun extract(dataSet: DataSet): Iterable<Rule> {
+    override fun extract(dataSet: DataSet): Collection<Rule> {
         val algorithm = FPGrowth()
         algorithm.setMinSupport(minimumSupport)
         algorithm.setNumPartitions(10)

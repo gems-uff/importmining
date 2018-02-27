@@ -1,26 +1,27 @@
 package br.uff.ic.vcs
 
-import br.uff.ic.logger.Logger
-import br.uff.ic.logger.LoggerFactory
+import br.uff.ic.domain.Project
 import org.eclipse.jgit.api.Git
 import java.io.File
 
-class JGit(private val directory: File) : VCS {
-
-    private companion object : Logger by LoggerFactory.new(JGit::class.java.canonicalName)
-
-    override fun clone(uri: String): File {
-        info("Cloning the repository")
+/**
+ * Clones a git repository
+ *
+ * @param directory the local directory file reference, location to be saved the cloned repository
+ * @param uri the location on the web of the git repository
+ *
+ * @return the master branch's latest version of the specified project
+ * */
+fun cloneRepository(uri: String, directory: File): Project {
+    if(directory.listFiles().count() <= 1) {
         try {
-            directory.deleteRecursively()
             Git.cloneRepository()
-                .setURI(uri)
-                .setDirectory(directory)
-                .call()
+                    .setURI(uri)
+                    .setDirectory(directory)
+                    .call()
         } catch (e: Exception) {
-            error("Could not clone the repository: $uri. Status=${e.message}")
             throw Exception("Could not clone the repository: $uri. Status=${e.message}")
         }
-        return directory
     }
+    return Project(directory)
 }

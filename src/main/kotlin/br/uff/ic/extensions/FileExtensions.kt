@@ -31,6 +31,17 @@ fun File.listFileWithSuffix(suffix: String): List<String> {
     return childrenFilteredFiles + filteredFiles
 }
 
+fun File.listFilesRecursively(predicate : (File) -> Boolean): List<String> {
+    val filteredFiles = this.listFiles { file -> predicate(file) }
+                            .map { it.absolutePath }
+                            .toList()
+
+    val childrenFilteredFiles = this.listFiles { file ->
+        file.isDirectory
+    }.map { it.listFilesRecursively(predicate) }.flatten()
+    return childrenFilteredFiles + filteredFiles
+}
+
 private class PackageVisitor : VoidVisitorAdapter<Void>() {
     var packageName: String = ""
     override fun visit(n: PackageDeclaration, arg: Void?) {
@@ -62,4 +73,14 @@ val File.mainPackage: String
     }
 
 val File.javaFiles: Set<String>
-    get () = listFileWithSuffix(".java").toSet()
+    get () = listFilesRecursively{  file ->
+            file.name.endsWith(".java")
+            && !file.absolutePath.contains("test")
+    }.toSet()
+
+fun <T: Any> foldOnFolder(set : MutableSet<T>, suffix: String, file: File, constr : (File) -> T) : MutableSet<T> =
+        if(file.isDirectory)
+            file.listFiles{ f -> f.name.endsWith(suffix) || f.isDirectory}
+                    .fold(set, { acumSet, folder -> foldOnFolder(acumSet, suffix, folder, constr) })
+        else
+            set.apply { add(constr(file)) }

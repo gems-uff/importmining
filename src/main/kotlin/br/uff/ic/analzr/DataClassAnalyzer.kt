@@ -14,7 +14,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import java.io.FileInputStream
 
 class DataClassAnalyzer : Analyzer<Rule, Evidence> {
-    private companion object : Logger by LoggerFactory.new(DataClassAnalyzer::class.java.canonicalName)
+    private companion object : Logger by LoggerFactory.new(DataClassAnalyzer::class.java)
 
     /**
      *  Analyzes the rule for basis on a data class, based on the ocurrence of the following rule:
