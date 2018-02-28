@@ -1,19 +1,26 @@
 import br.uff.ic.collector.ExplicitImportCollector
+import br.uff.ic.collector.JavaFile
 import br.uff.ic.domain.Project
+import br.uff.ic.extensions.orNull
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.DataSet
 import br.uff.ic.mining.FPGrowthRuleExtractor
+import br.uff.ic.mining.Row
 import br.uff.ic.mining.Rule
 import br.uff.ic.pipelines.JsonBucket
 import br.uff.ic.vcs.SystemGit
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.netty.util.internal.ConcurrentSet
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.JavaSparkContext
+import org.apache.spark.mllib.fpm.FPGrowth
+import org.apache.spark.mllib.fpm.FPGrowthModel
 import java.io.File
+import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
 
 
@@ -38,7 +45,6 @@ object ImportMining {
         repositoryUri = "https://github.com/apache/tomcat"
         logger = LoggerFactory.new(ImportMining::class.java)
     }
-
 
     @JvmStatic
     fun main(args: Array<String>) {
@@ -82,5 +88,63 @@ object ImportMining {
          }.let { time ->
              logger.info("${time.toDouble() / 1000}")
          }*/
+    }
+
+    fun loadProject(root : File, repositoryURI: String) : Project {
+        if(root.listFiles().count() <= 1){
+            val cmd = "git clone --depth=1 $repositoryURI ${root.absolutePath}"
+            val exitStatus = Runtime.getRuntime()
+                    .exec(cmd)
+                    .waitFor()
+
+            if (exitStatus != 0) {
+                throw Exception("Could not clone the repository: $repositoryURI. Status=$exitStatus")
+            }
+        }
+        return Project(root)
+    }
+
+    fun collectImports(project : Project): DataSet {
+
+        val javaFiles = project.sourcePaths
+            .parallelStream().map {
+                orNull { JavaFile.new(it) }
+            }.filter {
+                it != null
+            }.toList()
+        /*val javaFiles = project.sourceFiles*/
+
+        val projectPackages = javaFiles.map {
+            it!!.packageName
+        }.filter {
+            it.isNotEmpty()
+        }.toSet()
+
+        val localImports = ConcurrentSet<String>()
+        javaFiles.parallelStream().map {
+            val local = it!!.imports.filter { clazz ->
+                projectPackages.any {
+                    clazz.contains(it)
+                }
+            }.toSet()
+            localImports.addAll(local)
+        }
+        val header = localImports.sorted()
+        val rows = javaFiles.map {
+            Row(it!!.file.absolutePath, it.imports.toSet()  )
+        }
+        return DataSet(header, rows)
+    }
+
+    fun extract(dataSet: DataSet, minimumSupport: Double, minimumConfidence: Double): Collection<Rule> {
+        val algorithm = FPGrowth()
+        algorithm.setMinSupport(minimumSupport)
+        algorithm.setNumPartitions(10)
+        val fpGrowthModel: FPGrowthModel<String> = algorithm.run(dataSet.toRDD())
+        val rules = mutableListOf<Rule>()
+        for (rule in fpGrowthModel.generateAssociationRules(minimumConfidence).toLocalIterator().toIterable()) {
+            rules.add(Rule.fromSparkRule(rule, dataSet))
+        }
+        return rules
     }
 }

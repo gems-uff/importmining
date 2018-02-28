@@ -18,12 +18,7 @@ class Project(val location: File) {
      * does not contain duplicates
      * does not contain test files
      * */
-    val sourcePaths : Set<String>
-        get() = location
-                .listFilesRecursively { file ->
-                    file.name.endsWith(".java") &&
-                    !file.absolutePath.contains("test")
-                }.toSet()
+    val sourcePaths : Set<String> = listMainSourcePaths()
 
     /**
      * java files representation listed
@@ -32,15 +27,7 @@ class Project(val location: File) {
      * does not contain duplicates
      * all files are compilable
      * */
-    val sourceFiles: List<SourceFile?> = sourcePaths
-            .parallelStream()
-            .map {
-                orNull {
-                    SourceFile(File(it), this)
-                }
-            }.filter { it != null }
-            .toList()
-
+    val sourceFiles: List<SourceFile?> = parseSourceFiles()
 
     /**
      * project packages' paths listed
@@ -49,11 +36,7 @@ class Project(val location: File) {
      * does not contain duplicates
      * does not contain empty packages
      * */
-    val packages : List<String> = sourceFiles
-            .parallelStream()
-            .map{ it!!.packageName }
-            .filter{ it.isNotEmpty() }
-            .toList()
+    val packages : List<String> = listPackages()
 
     /**
      * imports from this project to this project
@@ -61,21 +44,7 @@ class Project(val location: File) {
      * does not contain duplicates
      * all entries are in @param sourcePaths
      * */
-    val imports : ConcurrentSet<String>
-        get() {
-            ConcurrentSet<String>().apply {
-                sourceFiles
-                .parallelStream()
-                .map {
-                    val local = it!!.imports.filter { clazz ->
-                        packages.any {
-                            clazz.contains(it)
-                        }
-                    }.toSet()
-                    addAll(local)
-                }
-            }.let { return it }
-        }
+    val imports : ConcurrentSet<String> = findLocalImports()
 
     /**
      * Returns true if the class given by @param clazz is a class of declared in this project
@@ -86,17 +55,35 @@ class Project(val location: File) {
     fun isFromThisProject(className : String) : Boolean =
             packages.parallelStream().anyMatch{ className.contains(it) }
 
-    /*fun removeExternalImports() : List<SourceFile>{
-        sourceFiles.parallelStream().map {
-            val local = it!!.imports.filter { clazz ->
-                packages.any {
-                    clazz.contains(it)
-                }
-            }.toSet()
-            it.copy(imports = local)
-        }.filter {
-            it.imports.isNotEmpty()
-        }.toList()
-        .let { return it }
-    }*/
+    private fun listMainSourcePaths() : Set<String> =
+        location.listFilesRecursively { file ->
+                    file.name.endsWith(".java") &&
+                    !file.absolutePath.contains("test")
+                }.toSet()
+
+    private fun parseSourceFiles() : List<SourceFile?> =
+        sourcePaths.parallelStream()
+                    .map {
+                        orNull {
+                            SourceFile(File(it), this)
+                        }
+                    }.filter { it != null }
+                    .toList()
+
+    private fun listPackages() : List<String> =
+        sourceFiles.parallelStream()
+                    .map{ it!!.packageName }
+                    .filter{ it.isNotEmpty() }
+                    .toList()
+
+    // TODO: trocar uso de packages.any para isFromThisProject
+    private fun findLocalImports() : ConcurrentSet<String> =
+        ConcurrentSet<String>().apply {
+            sourceFiles.parallelStream()
+                        .map { srcFile ->
+                            srcFile!!.imports
+                            .filter { clazz -> packages.any { clazz.contains(it) }}
+                            .let { imports -> addAll(imports) }
+                        }
+        }.let { localImports -> return localImports }
 }

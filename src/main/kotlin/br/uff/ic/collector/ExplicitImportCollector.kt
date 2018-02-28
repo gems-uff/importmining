@@ -1,24 +1,25 @@
 package br.uff.ic.collector
 
 import br.uff.ic.domain.Project
+import br.uff.ic.extensions.orNull
 import br.uff.ic.mining.DataSet
 import br.uff.ic.mining.Row
 import io.netty.util.internal.ConcurrentSet
+import kotlin.streams.toList
 
 
 class ExplicitImportCollector : ImportCollector {
 
     override fun collect(project : Project): DataSet {
 
-        val javaFiles = project.sourceFiles
-                /*sourcePaths
+        val javaFiles = project.sourcePaths
          .parallelStream().map {
             orNull {
                 JavaFile.new(it)
             }
         }.filter {
             it != null
-        }.toList()*/
+        }.toList()
         /*val javaFiles = project.sourceFiles*/
 
         val projectPackages = javaFiles.map {
@@ -38,7 +39,7 @@ class ExplicitImportCollector : ImportCollector {
         }
         val header = localImports.sorted()
         val rows = javaFiles.map {
-            Row(it!!.getFilePath(), it.imports.toSet()  )
+            Row(it!!.file.absolutePath, it.imports.toSet()  )
         }
         return DataSet(header, rows)
     }

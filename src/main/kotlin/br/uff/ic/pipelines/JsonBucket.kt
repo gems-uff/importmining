@@ -8,20 +8,24 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.reflect.KClass
 
+@Suppress("JoinDeclarationAndAssignment")
 /**
  * Class responsible for saving the states on json files
  * */
-class JsonBucket(
-        directory: String,
-        private val parser: ObjectMapper = ObjectMapper().registerKotlinModule()
-) {
-    private val directory: Path = File(directory).toPath().toAbsolutePath()
+class JsonBucket(directory: String) {
+    private val directoryPath: Path
+    private val parser: ObjectMapper
+
+    init {
+        parser = ObjectMapper().registerKotlinModule()
+        directoryPath = File(directory).let { FileSystems.getDefault().getPath(it.toString(), "$it-state.json") }
+    }
 
     /**
      * does the file exists?
      * */
     fun contains(name: String): Boolean {
-        return Files.exists(name.toPath())
+        return Files.exists(getPath(name))
     }
 
 
@@ -29,7 +33,7 @@ class JsonBucket(
      * save me the state under this name, please
      * */
     fun save(name: String, state: Any) {
-        Files.newBufferedWriter(name.toPath()).use { writer ->
+        Files.newBufferedWriter(getPath(name)).use { writer ->
             parser.writeValue(writer, state)
         }
     }
@@ -38,10 +42,11 @@ class JsonBucket(
      * load me this item of this class, please
      * */
     fun <T : Any> load(name: String, clazz: KClass<T>): T {
-        Files.newBufferedReader(name.toPath()).use { reader ->
+        Files.newBufferedReader(getPath(name)).use { reader ->
             return parser.readValue(reader, clazz.java)
         }
     }
 
-    private fun String.toPath() = FileSystems.getDefault().getPath(directory.toString(), "$this-state.json")
+    private fun getPath(name : String) : Path =
+        FileSystems.getDefault().getPath(directoryPath.toString(), "$name.json")
 }
