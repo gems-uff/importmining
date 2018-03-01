@@ -1,17 +1,14 @@
-import br.uff.ic.collector.ExplicitImportCollector
+import br.uff.ic.domain.Coupling
 import br.uff.ic.domain.Project
+import br.uff.ic.domain.SourceFile
 import br.uff.ic.extensions.orNull
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.DataSet
-import br.uff.ic.mining.FPGrowthRuleExtractor
-import br.uff.ic.mining.Row
+import br.uff.ic.mining.Transaction
 import br.uff.ic.mining.Rule
 import br.uff.ic.pipelines.JsonBucket
-import br.uff.ic.vcs.SystemGit
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.netty.util.internal.ConcurrentSet
 import kotlinx.coroutines.experimental.runBlocking
 import org.apache.spark.SparkConf
@@ -45,6 +42,7 @@ object ImportMining {
         logger = LoggerFactory.new(ImportMining::class.java)
     }
 
+    @Suppress("JoinDeclarationAndAssignment")
     @JvmStatic
     fun main(args: Array<String>) {
         measureTimeMillis {
@@ -59,7 +57,7 @@ object ImportMining {
             logger.info("collecting imports information")
             dataSet = runBlocking { collectImports(project) }
             logger.info("learning association rules from imports information")
-            rules = learnAssociationRules(dataSet, 0.001, 0.1)
+            rules = learnAssociationRules(dataSet, 0.05, 0.1)
             bucket.save("extracted-rules", rules)
             logger.info("measuring coupling from rules")
             couplings = measureCouplingInformation(rules)
@@ -90,37 +88,26 @@ object ImportMining {
     }
 
     private fun collectImports(project : Project) : DataSet {
-        val javaFiles = project
-                .sourcePaths
-                .parallelStream().map {
-            orNull {
-                JavaFile.new(it)
-            }
-        }.filter {
-            it != null
-        }.toList()
-        /*val javaFiles = project.sourceFiles*/
+        val srcs = project.parseSourceFiles()
 
-        val projectPackages = javaFiles.map {
-            it!!.packageName
-        }.filter {
-            it.isNotEmpty()
-        }.toSet()
+        val projectPackages = project.listPackages()
 
         val localImports = ConcurrentSet<String>()
-        val srcFiles = javaFiles.parallelStream()
+        val srcFiles = srcs.parallelStream()
                 .map {
                     val local = it!!.imports.filter { clazz ->
                         projectPackages.any {
                             clazz.contains(it)
                         }
                     }.toSet()
-                    localImports.addAll(local)
-                    it.copy(imports = local)
+                    localImports.apply{
+                        addAll(local)
+                    }
+                    it!!
                 }.filter { it.imports.isNotEmpty() }.toList()
         val header = localImports.sorted()
         val rows = srcFiles.map {
-            Row(it!!.file.path, it.imports.toSet()  )
+            Transaction(it!!.getFilePath(), it.imports.toSet()  )
         }
         return DataSet(header, rows)
     }

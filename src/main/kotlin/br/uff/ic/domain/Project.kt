@@ -1,6 +1,5 @@
 package br.uff.ic.domain
 
-import br.uff.ic.collector.JavaFile
 import br.uff.ic.extensions.listFilesRecursively
 import br.uff.ic.extensions.orNull
 import io.netty.util.internal.ConcurrentSet
@@ -61,7 +60,7 @@ class Project(val location: File) {
                     !file.absolutePath.contains("test")
                 }.toSet()
 
-    private fun parseSourceFiles() : List<SourceFile?> =
+    fun parseSourceFiles() : List<SourceFile?> =
         sourcePaths.parallelStream()
                     .map {
                         orNull {
@@ -70,20 +69,33 @@ class Project(val location: File) {
                     }.filter { it != null }
                     .toList()
 
-    private fun listPackages() : List<String> =
+    fun listPackages() : List<String> =
         sourceFiles.parallelStream()
                     .map{ it!!.packageName }
                     .filter{ it.isNotEmpty() }
                     .toList()
 
     // TODO: trocar uso de packages.any para isFromThisProject
-    private fun findLocalImports() : ConcurrentSet<String> =
+    fun findLocalImports() : ConcurrentSet<String> =
         ConcurrentSet<String>().apply {
             sourceFiles.parallelStream()
                         .map { srcFile ->
                             srcFile!!.imports
-                            .filter { clazz -> packages.any { clazz.contains(it) }}
-                            .let { imports -> addAll(imports) }
+                            .filter { clazz -> packages.any { clazz.contains(it) }}.toSet()
+                            .let { imports ->
+                                addAll(imports)
+                            }
                         }
         }.let { localImports -> return localImports }
+
+    /*srcs.parallelStream()
+    .map {
+        val local = it!!.imports.filter { clazz ->
+            projectPackages.any {
+                clazz.contains(it)
+            }
+        }.toSet()
+        localImports.addAll(local)
+        it.copy(imports = local)
+    }.filter { it.imports.isNotEmpty() }.toList()*/
 }

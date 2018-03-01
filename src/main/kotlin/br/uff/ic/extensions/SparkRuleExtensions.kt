@@ -12,7 +12,6 @@ fun <T> AssociationRules.Rule<T>.support(dataSet: DataSet): Double {
     return dataSet.supportOf(this.javaAntecedent().toStringSet())
 }
 
-
 fun <T> AssociationRules.Rule<T>.lift(dataSet: DataSet): Double {
     val antecedent = this.javaAntecedent().toStringSet()
     val consequent = this.javaConsequent().toStringSet()

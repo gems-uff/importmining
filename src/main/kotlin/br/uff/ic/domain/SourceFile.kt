@@ -17,9 +17,9 @@ import java.io.FileInputStream
  * @param imports the class' import statements
  * @param packageName the class' package name
  * */
-data class SourceFile(private val file: File, private val project: Project) {
+data class SourceFile(private val file: File, private val project: Project, var imports : Set<String> = setOf()) {
 
-    val imports : Set<String>
+
     val packageName : String
     /**
      * TODO: tornar mais independente de Java
@@ -31,7 +31,7 @@ data class SourceFile(private val file: File, private val project: Project) {
         val importVisitor = ImportVisitor()
         importVisitor.visit(compilationUnit, null)
         imports = importVisitor.imports
-                        .filter { project.isFromThisProject(it) }
+                        .filter { project.isFromThisProject(it) } //TODO: check if works
                         .toSet()
         val packageVisitor = PackageVisitor()
         packageVisitor.visit(compilationUnit, null)

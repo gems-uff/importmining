@@ -1,6 +1,6 @@
 package br.uff.ic.mining
 
-data class Row(
+data class Transaction(
         val name: String,
         val set: Set<String>
 )

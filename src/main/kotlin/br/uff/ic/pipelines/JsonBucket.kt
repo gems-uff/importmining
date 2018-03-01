@@ -18,7 +18,11 @@ class JsonBucket(directory: String) {
 
     init {
         parser = ObjectMapper().registerKotlinModule()
-        directoryPath = File(directory).let { FileSystems.getDefault().getPath(it.toString(), "$it-state.json") }
+        directoryPath = File(directory).let {
+            FileSystems.getDefault()
+                    .getPath(it.toString())
+                    .toAbsolutePath()
+        }
     }
 
     /**
