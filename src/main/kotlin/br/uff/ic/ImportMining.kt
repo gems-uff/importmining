@@ -1,8 +1,4 @@
-@file:Suppress("JoinDeclarationAndAssignment")
-
 import br.uff.ic.collector.ExplicitImportCollector
-import br.uff.ic.collector.JavaFile
-import br.uff.ic.domain.Coupling
 import br.uff.ic.domain.Project
 import br.uff.ic.extensions.orNull
 import br.uff.ic.logger.ConsoleHandler
