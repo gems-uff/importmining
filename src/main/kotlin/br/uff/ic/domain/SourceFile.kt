@@ -52,7 +52,6 @@ data class SourceFile(private val file: File, private val project: Project, var 
     /**
      * implements the collection of imports
      *
-     * TODO: use immutable collections, parallelize as possible
      * */
     class ImportVisitor(val imports: MutableCollection<String> = mutableListOf()) : VoidVisitorAdapter<Void>() {
         override fun visit(n: ImportDeclaration, arg: Void?) {
@@ -63,7 +62,6 @@ data class SourceFile(private val file: File, private val project: Project, var 
     /**
      * implements the detection of the package
      *
-     * TODO: change from voidvisitor to generic visitor, to get the import as return values. Create tests before.
      * */
     class PackageVisitor : VoidVisitorAdapter<Void>() {
         var packageName: String = ""

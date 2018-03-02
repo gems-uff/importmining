@@ -1,7 +1,5 @@
 import br.uff.ic.domain.Coupling
 import br.uff.ic.domain.Project
-import br.uff.ic.domain.SourceFile
-import br.uff.ic.extensions.orNull
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
@@ -22,31 +20,30 @@ import kotlin.system.measureTimeMillis
 
 object ImportMining {
 
-    // TODO: read about
     val sparkContext: JavaSparkContext
     private val tempDirectory : String
-    private val bucketLocation : String
-    private val repositoryUri : String
     private val logger : Logger
 
     init {
         LoggerFactory.addHandler(ConsoleHandler())
         val sparkConf = SparkConf()
-                .setAppName("ImportMining")
+                .setAppName(APP_NAME)
                 .setMaster("local[8]")
                 .set("spark.executor.memory", "1g")
         sparkContext = JavaSparkContext(sparkConf)
-        bucketLocation = "E:\\Pessoal\\Dev\\importmining\\src\\main\\resources"
-        tempDirectory = "$bucketLocation\\temp"
-        repositoryUri = "https://github.com/apache/tomcat"
+        tempDirectory = "$LOCATION\\temp"
         logger = LoggerFactory.new(ImportMining::class.java)
     }
 
     @Suppress("JoinDeclarationAndAssignment")
     @JvmStatic
     fun main(args: Array<String>) {
+        // TODO: bucketLocation = valor no $args, repositoryURI tb
+        val bucketLocation = null
+        val repositoryUri = "https://github.com/apache/tomcat"
+
         measureTimeMillis {
-            val bucket = JsonBucket(bucketLocation)
+            val bucket = JsonBucket(bucketLocation ?: LOCATION)
             val project : Project
             val dataSet : DataSet
             val rules : Collection<Rule>
@@ -57,7 +54,7 @@ object ImportMining {
             logger.info("collecting imports information")
             dataSet = runBlocking { collectImports(project) }
             logger.info("learning association rules from imports information")
-            rules = learnAssociationRules(dataSet, 0.05, 0.1)
+            rules = learnAssociationRules(dataSet, BASE_SUPPORT, BASE_CONFIDENCE)
             bucket.save("extracted-rules", rules)
             logger.info("measuring coupling from rules")
             couplings = measureCouplingInformation(rules)
@@ -89,9 +86,7 @@ object ImportMining {
 
     private fun collectImports(project : Project) : DataSet {
         val srcs = project.parseSourceFiles()
-
         val projectPackages = project.listPackages()
-
         val localImports = ConcurrentSet<String>()
         val srcFiles = srcs.parallelStream()
                 .map {
@@ -126,7 +121,7 @@ object ImportMining {
 
     private fun measureCouplingInformation(rules : Collection<Rule>) : Collection<Coupling>{
         return rules.flatMap { it.items }
-                .associateBy({it}, {item -> rules.filter { it.items.contains(item) }})
-                .map { Coupling(it.key, it.value) }
+                    .associateBy({it}, {item -> rules.filter { it.items.contains(item) }})
+                    .map { Coupling(it.key, it.value) }
     }
 }
