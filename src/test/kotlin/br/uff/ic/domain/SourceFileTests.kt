@@ -29,7 +29,7 @@ class SourceFileTests {
     * imports are not empty (for a nonempty importlist class)
     * package is the . separated package name
     * */
-
+/*
     @Test fun creationWithoutJavaParser() =
             SourceFile(sourcePath, listOf(), "")
                     .let {
@@ -76,5 +76,5 @@ class SourceFileTests {
                     .visit(JavaParser()
                             .parse(ParseStart.COMPILATION_UNIT, Providers.provider(FileInputStream(sourcePath)))
                             .result.get(), null))
-                    .shouldBeTrue()
+                    .shouldBeTrue()*/
 }

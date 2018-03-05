@@ -18,7 +18,7 @@ class ProjectTests {
             project.sourcePaths
                     .shouldNotBeEmpty()
 
-    @Test fun testProjectsSourcePathsEncompassWholeProjectsSources() =
+    /*@Test fun testProjectsSourcePathsEncompassWholeProjectsSources() =
             foldOnFolder(mutableSetOf(),
                     ".java",
                     projectLocation,
@@ -110,5 +110,5 @@ class ProjectTests {
             ).first()
                     .let {
                         project.isFromThisProject(it)
-                    }
+                    }*/
 }

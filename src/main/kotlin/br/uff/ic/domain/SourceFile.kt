@@ -17,10 +17,10 @@ import java.io.FileInputStream
  * @param imports the class' import statements
  * @param packageName the class' package name
  * */
-data class SourceFile(private val file: File, private val project: Project, var imports : Set<String> = setOf()) {
-
+data class SourceFile(private val file: File, private val project: Project) {
 
     val packageName : String
+    val imports : Set<String>
     /**
      * TODO: tornar mais independente de Java
      * */

@@ -2,7 +2,8 @@ package br.uff.ic.domain
 
 import br.uff.ic.extensions.listFilesRecursively
 import br.uff.ic.extensions.orNull
-import io.netty.util.internal.ConcurrentSet
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.immutableHashSetOf
 import java.io.File
 import kotlin.streams.toList
 
@@ -43,7 +44,7 @@ class Project(val location: File) {
      * does not contain duplicates
      * all entries are in @param sourcePaths
      * */
-    val imports : ConcurrentSet<String> = findLocalImports()
+    val imports : ImmutableSet<String> = findLocalImports()
 
     /**
      * Returns true if the class given by @param clazz is a class of declared in this project
@@ -66,7 +67,7 @@ class Project(val location: File) {
                         orNull {
                             SourceFile(File(it), this)
                         }
-                    }.filter { it != null }
+                    }.filter { it != null}
                     .toList()
 
     fun listPackages() : List<String> =
@@ -76,12 +77,12 @@ class Project(val location: File) {
                     .toList()
 
     // TODO: trocar uso de packages.any para isFromThisProject
-    fun findLocalImports() : ConcurrentSet<String> =
-        ConcurrentSet<String>().apply {
+    fun findLocalImports() : ImmutableSet<String> =
+        immutableHashSetOf<String>().apply {
             sourceFiles.parallelStream()
                         .map { srcFile ->
                             srcFile!!.imports
-                            .filter { clazz -> packages.any { clazz.contains(it) }}.toSet()
+                            .filter { clazz -> isFromThisProject(clazz)}.toSet()
                             .let { imports ->
                                 addAll(imports)
                             }
