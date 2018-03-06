@@ -2,7 +2,7 @@ package br.uff.ic.vcs
 
 import br.uff.ic.domain.Project
 import java.io.File
-
+/*
 class SystemGit(private val directory: File){
 
     fun clone(uri: String): Project {
@@ -17,4 +17,4 @@ class SystemGit(private val directory: File){
         }
         return Project(directory)
     }
-}
+}*/

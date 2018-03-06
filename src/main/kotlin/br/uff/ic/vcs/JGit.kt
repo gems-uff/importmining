@@ -12,7 +12,7 @@ import java.io.File
  *
  * @return the master branch's latest version of the specified project
  * */
-fun cloneRepository(uri: String, directory: File): Project {
+/*fun cloneRepository(uri: String, directory: File): Project {
     if(directory.listFiles().count() <= 1) {
         try {
             Git.cloneRepository()
@@ -24,4 +24,4 @@ fun cloneRepository(uri: String, directory: File): Project {
         }
     }
     return Project(directory)
-}
+}*/

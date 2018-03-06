@@ -2,49 +2,14 @@ package br.uff.ic.domain
 
 import br.uff.ic.extensions.listFilesRecursively
 import br.uff.ic.extensions.orNull
-import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.immutableHashSetOf
 import java.io.File
 import kotlin.streams.toList
 
-@Suppress("JoinDeclarationAndAssignment")
-class Project(val location: File) {
-
-    /**
-     * source files' paths
-     *
-     * assumptions:
-     * contains the absolute file paths of all source files in the project for a given language
-     * does not contain duplicates
-     * does not contain test files
-     * */
-    val sourcePaths : Set<String> = listMainSourcePaths()
-
-    /**
-     * java files representation listed
-     * assumptions:
-     * contains the files which paths are in @param sourcePaths, instantiated to File(s)
-     * does not contain duplicates
-     * all files are compilable
-     * */
-    val sourceFiles: List<SourceFile?> = parseSourceFiles()
-
-    /**
-     * project packages' paths listed
-     * assumptions:
-     * contains packages from the given project only
-     * does not contain duplicates
-     * does not contain empty packages
-     * */
-    val packages : List<String> = listPackages()
-
-    /**
-     * imports from this project to this project
-     * assumptions:
-     * does not contain duplicates
-     * all entries are in @param sourcePaths
-     * */
-    val imports : ImmutableSet<String> = findLocalImports()
+data class Project(val location: File,
+              val sourcePaths : List<String>,
+              val sourceFiles: List<SourceFile>,
+              val packages : List<String>,
+              val imports : List<String>) {
 
     /**
      * Returns true if the class given by @param clazz is a class of declared in this project
@@ -52,42 +17,60 @@ class Project(val location: File) {
      * className is a simple class name
      * packages are absolute class names with package paths @see packages
      * */
-    fun isFromThisProject(className : String) : Boolean =
-            packages.parallelStream().anyMatch{ className.contains(it) }
+    fun defines(className : String) : Boolean {
+        if(packages.count() == 0) throw IllegalStateException("Packages have not been parsed yet.")
+        return packages.any{ className.contains(it) }
+    }
 
-    private fun listMainSourcePaths() : Set<String> =
-        location.listFilesRecursively { file ->
-                    file.name.endsWith(".java") &&
-                    !file.absolutePath.contains("test")
-                }.toSet()
+    fun listMainSourcePaths() : Project {
+        if(!location.exists()) throw IllegalStateException("Project location is invalid.")
+        val paths = location.listFilesRecursively { file -> file.name.endsWith(".java") && !file.absolutePath.contains("test") }
+        return this.copy(sourcePaths = paths)
+    }
 
-    fun parseSourceFiles() : List<SourceFile?> =
-        sourcePaths.parallelStream()
-                    .map {
-                        orNull {
-                            SourceFile(File(it), this)
-                        }
-                    }.filter { it != null}
-                    .toList()
+    fun parseSourceFiles() : Project {
+        if(sourcePaths.count() == 0) throw IllegalStateException("Source paths have not been resolved.")
+        val sourceFiles = sourcePaths.parallelStream()
+                .map { orNull { SourceFile(File(it), this, "", listOf()) } }
+                .filter { it != null}
+                .map { it!!.parseSource() }
+                .distinct()
+                .toList()
+        return this.copy(sourceFiles = sourceFiles)
+    }
 
-    fun listPackages() : List<String> =
-        sourceFiles.parallelStream()
-                    .map{ it!!.packageName }
-                    .filter{ it.isNotEmpty() }
-                    .toList()
+    fun listPackages() : Project {
+        if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
+        val packages = sourceFiles
+                .map{ it.packageName }
+                .filter{ it.isNotEmpty() }
+                .distinct()
+                .toList()
+
+        return this.copy(packages = packages)
+    }
+
+    fun removeExternalImports() : Project {
+        if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
+
+        val srcFiles = sourceFiles
+                .map { it.removeExternalImports() }
+                .filter { it.imports.isNotEmpty() }
+                .toList()
+
+        return this.copy(sourceFiles = srcFiles)
+    }
 
     // TODO: trocar uso de packages.any para isFromThisProject
-    fun findLocalImports() : ImmutableSet<String> =
-        immutableHashSetOf<String>().apply {
-            sourceFiles.parallelStream()
-                        .map { srcFile ->
-                            srcFile!!.imports
-                            .filter { clazz -> isFromThisProject(clazz)}.toSet()
-                            .let { imports ->
-                                addAll(imports)
-                            }
-                        }
-        }.let { localImports -> return localImports }
+    fun findLocalImports() : Project {
+        if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
+
+        val imports = this.sourceFiles
+                .flatMap { it.imports }
+                .distinct()
+                .toList()
+        return this.copy(imports = imports)
+    }
 
     /*srcs.parallelStream()
     .map {

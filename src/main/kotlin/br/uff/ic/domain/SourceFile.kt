@@ -17,25 +17,25 @@ import java.io.FileInputStream
  * @param imports the class' import statements
  * @param packageName the class' package name
  * */
-data class SourceFile(private val file: File, private val project: Project) {
+data class SourceFile(private val file: File, private val project: Project, val packageName : String, val imports : List<String>) {
 
-    val packageName : String
-    val imports : Set<String>
     /**
      * TODO: tornar mais independente de Java
      * */
 
-    init {
+    fun parseSource() : SourceFile{
         val compilationUnit = JavaParser().parse(ParseStart.COMPILATION_UNIT, Providers.provider(FileInputStream(file)))
                 .result.get()
         val importVisitor = ImportVisitor()
         importVisitor.visit(compilationUnit, null)
-        imports = importVisitor.imports
-                        .filter { project.isFromThisProject(it) } //TODO: check if works
-                        .toSet()
         val packageVisitor = PackageVisitor()
         packageVisitor.visit(compilationUnit, null)
-        packageName = packageVisitor.packageName
+
+        return this.copy(imports = importVisitor.imports.toList(), packageName = packageVisitor.packageName)
+    }
+
+    fun removeExternalImports() : SourceFile {
+        return this.copy(imports = this.imports.filter { project.defines(it) })
     }
 
     /**

@@ -55,7 +55,7 @@ object ImportMining {
             //minimumSupport = project.sourcePaths.size.let { if(it > 10) 10.0 / it else BASE_SUPPORT }
             minimumSupport = 0.1
             logger.info("collecting imports information")
-            dataSet = runBlocking { collectImports(project) }
+            dataSet = collectImports(project)
             logger.info("learning association rules from imports information")
             rules = learnAssociationRules(dataSet, minimumSupport, BASE_CONFIDENCE)
             bucket.save("extracted-rules", rules)
@@ -83,16 +83,21 @@ object ImportMining {
             }
         }
 
-        return Project(directory)
+        return Project(directory, listOf(), listOf(), listOf(), listOf())
     }
 
     fun collectImports(project : Project) : DataSet {
 
-        val rows = project.parseSourceFiles()
-                .filter { it!!.imports.isNotEmpty() }
-                .map { Transaction(it!!.getFilePath(), it.imports.toSet())}
-        val header = project.findLocalImports().sorted()
-        return DataSet(header, rows)
+        project.listMainSourcePaths()
+                .parseSourceFiles()
+                .listPackages()
+                .removeExternalImports()
+                .findLocalImports()
+                .let {
+                    val rows = it.sourceFiles.map { Transaction(it.getFilePath(), it.imports.toSet())} // TODO: mudar par Set
+                    val header = project.imports.sorted()
+                    return DataSet(header, rows)
+                }
     }
 
     fun learnAssociationRules(dataSet: DataSet, minimumSupport : Double, minimumConfidence : Double) : Collection<Rule> {

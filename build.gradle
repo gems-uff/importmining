@@ -82,7 +82,7 @@ dependencies {
     compile libraries.mining
     compile libraries.parser
     compile libraries.utils
-    compile 'org.jetbrains.kotlinx:kotlinx-collections-immutable:0.1'
+    compile 'com.google.guava:guava:24.0-jre'
 
     testCompile libraries.testing
     testRuntime libraries.testingRuntime
