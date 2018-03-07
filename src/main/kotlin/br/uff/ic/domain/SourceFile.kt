@@ -17,7 +17,7 @@ import java.io.FileInputStream
  * @param imports the class' import statements
  * @param packageName the class' package name
  * */
-data class SourceFile(private val file: File, private val project: Project, val packageName : String, val imports : List<String>) {
+data class SourceFile(private val file: File, val packageName : String, val imports : List<String>) {
 
     /**
      * TODO: tornar mais independente de Java
@@ -34,8 +34,8 @@ data class SourceFile(private val file: File, private val project: Project, val 
         return this.copy(imports = importVisitor.imports.toList(), packageName = packageVisitor.packageName)
     }
 
-    fun removeExternalImports() : SourceFile {
-        return this.copy(imports = this.imports.filter { project.defines(it) })
+    fun removeExternalImports(project: Project) : SourceFile {
+        return SourceFile(file, packageName, this.imports.filter { project.defines(it) })
     }
 
     /**

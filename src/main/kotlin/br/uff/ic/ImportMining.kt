@@ -94,7 +94,7 @@ object ImportMining {
                 .removeExternalImports()
                 .findLocalImports()
                 .let {
-                    val rows = it.sourceFiles.map { Transaction(it.getFilePath(), it.imports.toSet())} // TODO: mudar par Set
+                    val rows = it.sourceFiles.parallelStream().map { Transaction(it.getFilePath(), it.imports.toSet())}.toList() // TODO: mudar par Set
                     val header = project.imports.sorted()
                     return DataSet(header, rows)
                 }

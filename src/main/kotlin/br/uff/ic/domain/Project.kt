@@ -25,40 +25,40 @@ data class Project(val location: File,
     fun listMainSourcePaths() : Project {
         if(!location.exists()) throw IllegalStateException("Project location is invalid.")
         val paths = location.listFilesRecursively { file -> file.name.endsWith(".java") && !file.absolutePath.contains("test") }
-        return this.copy(sourcePaths = paths)
+        return this.copy(sourcePaths = paths)//Project(location, paths, sourceFiles, packages, imports)
     }
 
     fun parseSourceFiles() : Project {
         if(sourcePaths.count() == 0) throw IllegalStateException("Source paths have not been resolved.")
         val sourceFiles = sourcePaths.parallelStream()
-                .map { orNull { SourceFile(File(it), this, "", listOf()) } }
+                .map { orNull { SourceFile(File(it), "", listOf()).parseSource() } }
                 .filter { it != null}
-                .map { it!!.parseSource() }
+                .map { it!! }
                 .distinct()
                 .toList()
-        return this.copy(sourceFiles = sourceFiles)
+        return this.copy(sourceFiles = sourceFiles)//Project(location, sourcePaths, sourceFiles, packages, imports)
     }
 
     fun listPackages() : Project {
         if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
-        val packages = sourceFiles
+        val packages = sourceFiles.parallelStream()
                 .map{ it.packageName }
                 .filter{ it.isNotEmpty() }
                 .distinct()
                 .toList()
 
-        return this.copy(packages = packages)
+        return this.copy(packages = packages)//Project(location, sourcePaths, sourceFiles, packages, imports)
     }
 
     fun removeExternalImports() : Project {
         if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
 
-        val srcFiles = sourceFiles
-                .map { it.removeExternalImports() }
+        val srcFiles = sourceFiles.parallelStream()
+                .map { it.removeExternalImports(this) }
                 .filter { it.imports.isNotEmpty() }
                 .toList()
 
-        return this.copy(sourceFiles = srcFiles)
+        return this.copy(sourceFiles = srcFiles)//Project(location, sourcePaths, srcFiles, packages, imports)
     }
 
     // TODO: trocar uso de packages.any para isFromThisProject
@@ -67,19 +67,9 @@ data class Project(val location: File,
 
         val imports = this.sourceFiles
                 .flatMap { it.imports }
+                .parallelStream()
                 .distinct()
                 .toList()
-        return this.copy(imports = imports)
+        return this.copy(imports = imports)//Project(location, sourcePaths, sourceFiles, packages, imports) //
     }
-
-    /*srcs.parallelStream()
-    .map {
-        val local = it!!.imports.filter { clazz ->
-            projectPackages.any {
-                clazz.contains(it)
-            }
-        }.toSet()
-        localImports.addAll(local)
-        it.copy(imports = local)
-    }.filter { it.imports.isNotEmpty() }.toList()*/
 }
