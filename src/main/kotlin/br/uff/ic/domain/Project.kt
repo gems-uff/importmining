@@ -61,7 +61,6 @@ data class Project(val location: File,
         return this.copy(sourceFiles = srcFiles)//Project(location, sourcePaths, srcFiles, packages, imports)
     }
 
-    // TODO: trocar uso de packages.any para isFromThisProject
     fun findLocalImports() : Project {
         if(sourceFiles.count() == 0) throw IllegalStateException("Source Files have not been parsed yet.")
 

@@ -82,8 +82,7 @@ dependencies {
     compile libraries.mining
     compile libraries.parser
     compile libraries.utils
-    compile 'com.google.guava:guava:24.0-jre'
-
+    compile "com.xenomachina:kotlin-argparser:2.0.4"
     testCompile libraries.testing
     testRuntime libraries.testingRuntime
 }

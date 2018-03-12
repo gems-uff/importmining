@@ -1,7 +1,5 @@
 package br.uff.ic.domain
 
-import br.uff.ic.extensions.foldOnFolder
-import br.uff.ic.vcs.cloneRepository
 import org.amshove.kluent.*
 import org.junit.Test
 import java.io.File
@@ -10,14 +8,14 @@ class ProjectTests {
 
     private val projectLocation : File = File("D:\\Geral\\Desenvolvimento\\Kotlin")
     private val projectRepository : String = "https://github.com/apache/tomcat" // TODO: put a smaller repository
-    private val project : Project = cloneRepository(projectRepository, projectLocation)
+   // private val project : Project = cloneRepository(projectRepository, projectLocation)
 
     /* Source Paths */
-
+/*
     @Test fun testProjectsSourcePathsNotEmpty() =
             project.sourcePaths
                     .shouldNotBeEmpty()
-
+*/
     /*@Test fun testProjectsSourcePathsEncompassWholeProjectsSources() =
             foldOnFolder(mutableSetOf(),
                     ".java",
