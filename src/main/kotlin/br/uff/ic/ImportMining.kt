@@ -133,8 +133,14 @@ object ImportMining {
 
     fun measureCouplingInformation(rules : Collection<Rule>) : Collection<Coupling>{
         return rules.flatMap { it.items }
-                    .associateBy({it}, {item -> rules.filter { it.items.contains(item) }})
-                    .map { Coupling(it.key, it.value) }
-        // TODO: mapear para a classe X, classe Y e todas as regras que as ligam
+                .flatMap { item ->
+                    rules.filter { it.items.contains(item) }
+                         .map { it.removeItem(item) }
+                         .flatMap { it.items.map { item to it } }
+                }
+                .map { pair -> Coupling(pair.first, pair.second, rules.filter { it.items.containsAll(pair.toList()) }.map { it.removeInstances() }) }
+        // TODO: testar que todas as regras que contém estes itens estão no Acoplamento devido
+        // TODO remover duplicatas  do tipo A->B, B->A e duplicatas exatas
+
     }
 }

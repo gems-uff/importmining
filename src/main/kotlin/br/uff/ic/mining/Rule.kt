@@ -37,4 +37,13 @@ data class Rule(
             )
         }
     }
+
+    fun removeItem(item : String): Rule{
+        return copy(premises = premises.filter { it != item },
+                consequent = consequent.filter { it != item })
+    }
+
+    fun removeInstances() : Rule {
+        return copy(instances = listOf())
+    }
 }
