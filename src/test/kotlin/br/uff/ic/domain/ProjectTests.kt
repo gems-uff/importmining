@@ -1,74 +1,86 @@
 package br.uff.ic.domain
 
+import br.uff.ic.extensions.createIfNotExists
+import br.uff.ic.vcs.SystemGit
 import org.amshove.kluent.*
+import org.junit.BeforeClass
 import org.junit.Test
 import java.io.File
 
 class ProjectTests {
 
-    private val projectLocation : File = File("D:\\Geral\\Desenvolvimento\\Kotlin")
-    private val projectRepository : String = "https://github.com/apache/tomcat" // TODO: put a smaller repository
-   // private val project : Project = cloneRepository(projectRepository, projectLocation)
+    private val projectLocation = File("C:\\importmining\\test\\ongoing")
 
-    /* Source Paths */
-/*
-    @Test fun testProjectsSourcePathsNotEmpty() =
-            project.sourcePaths
-                    .shouldNotBeEmpty()
-*/
-    /*@Test fun testProjectsSourcePathsEncompassWholeProjectsSources() =
-            foldOnFolder(mutableSetOf(),
-                    ".java",
-                    projectLocation,
-                    {file -> file.name}
-            ).shouldContainAll(project.sourcePaths)
+    companion object {
+        private const val projectRepository = "https://github.com/DuGuQiuBai/Java"
+        private val projectLocation = File("C:\\importmining\\test\\ongoing")
 
-    @Test fun testProjectsSourcePathsDoesNotContainsTestSources() =
-            project.sourcePaths
-                    .all { !it.contains("test") && !it.contains("Test") && !it.contains("TEST")}
-                    .shouldBeTrue()
+        @JvmStatic @BeforeClass fun prepare(){
+            SystemGit.clone(projectLocation.createIfNotExists(), projectRepository)
+        }
+    }
 
-    /* Source Files */
+    @Test fun projectSourcePathsNotEmpty() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .sourcePaths
+                .shouldNotBeEmpty()
 
-    @Test fun testProjectsSourceFilesNotEmpty() =
-            project.sourceFiles
-                    .shouldNotBeEmpty()
+    @Test fun projectSourceFilesNotEmpty() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .sourceFiles
+                .shouldNotBeEmpty()
 
+    @Test fun projectPackagesNotEmpty() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .packages
+                .shouldNotBeEmpty()
+
+    @Test fun projectImportsNotEmpty() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .imports
+                .shouldNotBeEmpty()
+
+    @Test fun projectSourceFilesHaveWholeProjectSources() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .let {
+                    it.sourceFiles.count().shouldEqualTo(it.sourcePaths.count())
+                }
+
+    @Test fun projectSourceFilesDoesNotContainDuplicates() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+                .let {
+                    it.sourceFiles.distinct().count().shouldEqualTo(it.sourceFiles.count())
+                }
+
+    @Test fun projectPackagesDoesntHaveDuplicates() =
+        Project(projectLocation, IncludeTests.INCLUDE)
+            .let {
+                it.packages.distinct().count().shouldEqualTo(it.packages.count())
+            }
+
+    /*@Test fun testProjectsSourcePathsDoesNotContainsTestSources() =
+            Project(projectLocation, IncludeTests.INCLUDE)
+                .let {
+                    it.sourcePaths
+                        .all { !it.contains("test") && !it.contains("Test") && !it.contains("TEST")}
+                        .shouldBeTrue()
+                }*/
     @Test fun testProjectsSourceFilesEncompassWholeProjectsSources() =
-            project.sourceFiles
-                    .all { project.sourcePaths.contains(it.getFilePath()) }
-                    .shouldBeTrue()
-
-    @Test fun testProjectsSourceFilesDoesNotContainDuplicates() =
-            project.sourceFiles
-                    .distinct()
-                    .count()
-                    .shouldEqualTo(project.sourceFiles.count())
-
-    @Test fun testProjectsSourceFilesAreAllCompilable() =
-            project.sourceFiles
-                    .count()
-                    .shouldEqualTo(project.sourcePaths.count())
-
-    /* Packages */
-
-    @Test fun testProjectsPackagesNotEmpty() =
-            project.packages
-                    .shouldNotBeEmpty()
-
-    @Test fun testProjectsPackagesEncompassWholeProjectsPackages() =
-            // TODO: test this
-            foldOnFolder(mutableSetOf(),
-                    ".java",
-                    projectLocation,
-                    {file -> file.absolutePath
-                            .substringAfterLast(projectLocation.absolutePath)
-                            .replace('\\', '.')
-                            .replace(".java", "")
-                            .substringBeforeLast('.')
+            Project(projectLocation, IncludeTests.INCLUDE)
+                    .let { proj ->
+                        proj.sourceFiles
+                        .all { proj.sourcePaths.contains(it.getFilePath()) }
+                        .shouldBeTrue()
                     }
-            ).shouldContainAll(project.packages)
 
+    /*
+    @Test fun projectImportsAreReallyInternal() = TODO()
+
+    @Test fun isFromThisProjectOnFakeClass() = TODO()
+
+    @Test fun isFromThisProjectOnRealClass() = TODO()
+    */
+/*
     @Test fun testProjectsPackagesHasNoEmptyPackage() =
             project.packages
                     .map { File(it.replace('.', '\\')) }
@@ -76,25 +88,12 @@ class ProjectTests {
                     .all { it.count() > 0 }
                     .shouldBeTrue()
 
-    @Test fun testProjectsPackagesDoesNotContainDuplicates() =
-            project.packages
-                    .distinct()
-                    .count()
-                    .shouldEqualTo(project.packages.count())
-
-    /* Imports */
-
-    @Test fun testProjectsImportsNotEmpty() =
-            project.imports
-                    .shouldNotBeEmpty()
-
     @Test fun testProjectsImportsAreReallyInternal() =
             project.imports
                     .map { "${projectLocation.absolutePath}\\${it.replace('.', '\\')}" }
                     .all { project.sourcePaths.contains(it) }
                     .shouldBeTrue()
 
-    /* is from this project */
 
     @Test fun testIsFromThisProjectFakeClass() =
             project.isFromThisProject(this.javaClass.canonicalName)

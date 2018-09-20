@@ -1,5 +1,7 @@
 import br.uff.ic.domain.Coupling
+import br.uff.ic.domain.IncludeTests
 import br.uff.ic.domain.Project
+import br.uff.ic.extensions.createIfNotExists
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
@@ -7,6 +9,7 @@ import br.uff.ic.mining.DataSet
 import br.uff.ic.mining.Transaction
 import br.uff.ic.mining.Rule
 import br.uff.ic.pipelines.JsonBucket
+import br.uff.ic.vcs.SystemGit
 import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.default
 import io.netty.util.internal.ConcurrentSet
@@ -42,26 +45,33 @@ object ImportMining {
 
     @Suppress("JoinDeclarationAndAssignment")
     @JvmStatic
-    fun main(args: Array<String>) {
-        val arguments = ArgParser(args)
-
-        val bucketLocation by arguments.storing("-l", "--location", help ="set output location")
-                                        .default(LOCATION)
-        val repositoryUri by arguments.storing("-u", "--uri", help = "set git repository URI")
-                                        .default(URI)
-        val deleteAtTheEnd by arguments.flagging("-d", "--delete", help = "should the project files analyzed be deleted after the execution?")
-                                        .default(false)
-
+    fun main(arguments: Array<String>) {
+        val args = ArgParser(arguments)
+        val bucketLocation by args.storing("-l", "--location",
+                                           help ="set output location")
+                                .default(LOCATION)
+        val repositoryUri  by args.storing("-u", "--uri",
+                                           help = "set git repository URI")
+                                .default(URI)
+        val deleteAtTheEnd by args.flagging("-d", "--delete",
+                                           help = "should the project files analyzed be deleted after the execution?")
+                                .default(false)
+        val includeTestFiles by args.flagging("-t", "--tests",
+                                           help="should the project's test files be taken into account?")
+                                .default(false)
         measureTimeMillis {
             val bucket = JsonBucket(bucketLocation)
+            val location : File
             val project : Project
             val dataSet : DataSet
             val rules : Collection<Rule>
             val couplings : Collection<Coupling>
             val minimumSupport : Double
+            val includeTests = if(includeTestFiles) IncludeTests.INCLUDE else IncludeTests.EXCLUDE
 
             logger.info("cloning the repository: $repositoryUri @ $tempDirectory")
-            project = cloneRepository(tempDirectory, repositoryUri)
+            location = SystemGit.clone(File(tempDirectory).createIfNotExists(), repositoryUri)
+            project = Project(location, includeTests)
             //minimumSupport = project.sourcePaths.size.let { if(it > 10) 10.0 / it else BASE_SUPPORT }
             minimumSupport = BASE_SUPPORT
             logger.info("collecting imports information")
@@ -84,30 +94,9 @@ object ImportMining {
         }
     }
 
-    fun cloneRepository(folderLocation : String, repositoryURI : String) : Project {
-        val directory = File(folderLocation)
-
-        if(directory.listFiles().count() <= 1){
-            val cmd = "git clone --depth=1 $repositoryURI ${directory.absolutePath}"
-            val status = Runtime.getRuntime()
-                    .exec(cmd)
-                    .waitFor()
-            if (status != 0) {
-                throw Exception("Could not clone the repository: $repositoryURI. Status=$status")
-            }
-        }
-
-        return Project(directory, listOf(), listOf(), listOf(), listOf())
-    }
-
     fun collectImports(project : Project) : DataSet {
 
-        project.listMainSourcePaths()
-                .parseSourceFiles()
-                .listPackages()
-                .removeExternalImports()
-                .findLocalImports()
-                .let {
+        project.let {
                     val rows = it.sourceFiles.parallelStream().map { Transaction(it.getFilePath(), it.imports)}.toList()
                     val header = it.imports.sorted()
                     return DataSet(header, rows)

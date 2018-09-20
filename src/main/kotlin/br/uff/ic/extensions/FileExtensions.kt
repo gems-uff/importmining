@@ -10,7 +10,7 @@ fun File.listFilesRecursively(predicate : (File) -> Boolean): List<String> {
 
     val childrenFilteredFiles = this.listFiles { file -> file.isDirectory }
             .flatMap { it.listFilesRecursively(predicate) }
-    return childrenFilteredFiles + filteredFiles
+    return filteredFiles + childrenFilteredFiles
 }
 
 private class PackageVisitor : VoidVisitorAdapter<Void>() {
@@ -19,4 +19,9 @@ private class PackageVisitor : VoidVisitorAdapter<Void>() {
         packageName = n.nameAsString
         super.visit(n, arg)
     }
+}
+
+fun File.createIfNotExists() : File{
+    if(!this.exists()) this.mkdirs()
+    return this
 }

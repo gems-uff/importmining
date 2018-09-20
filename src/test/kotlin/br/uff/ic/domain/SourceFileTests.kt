@@ -15,13 +15,13 @@ import java.io.FileInputStream
 
 class SourceFileTests {
 
+/*
     private lateinit var sourceFile : SourceFile
     private val sourcePath : File = File("")
     private val project : Project = Project(File(""))
-
     @BeforeClass fun parseSourceFile() {
         sourceFile = SourceFile(sourcePath, project)
-    }
+    }*/
     /*
     * called from whole constructor does not execute javaparser
     * called from second constructor works with javaparser
