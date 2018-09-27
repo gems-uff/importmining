@@ -1,37 +1,28 @@
-import br.uff.ic.domain.Coupling
-import br.uff.ic.domain.IncludeTests
+import br.uff.ic.domain.CouplingInfo
 import br.uff.ic.domain.Project
+import br.uff.ic.domain.Tests
 import br.uff.ic.extensions.createIfNotExists
 import br.uff.ic.logger.ConsoleHandler
 import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.DataSet
-import br.uff.ic.mining.Transaction
-import br.uff.ic.mining.Rule
+import br.uff.ic.mining.Itemset
 import br.uff.ic.pipelines.JsonBucket
 import br.uff.ic.vcs.SystemGit
 import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.default
-import io.netty.util.internal.ConcurrentSet
-import kotlinx.coroutines.experimental.runBlocking
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.JavaSparkContext
-import org.apache.spark.mllib.fpm.FPGrowth
-import org.apache.spark.mllib.fpm.FPGrowthModel
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
-
 
 object ImportMining {
 
     val sparkContext: JavaSparkContext
-    private val tempDirectory : String
-    private val logger : Logger
+    private val tempDirectory: String
+    private val logger: Logger
 
+    // Loads logger, spark context and temp location used
     init {
         LoggerFactory.addHandler(ConsoleHandler())
         val sparkConf = SparkConf()
@@ -48,88 +39,67 @@ object ImportMining {
     fun main(arguments: Array<String>) {
         val args = ArgParser(arguments)
         val bucketLocation by args.storing("-l", "--location",
-                                           help ="set output location")
-                                .default(LOCATION)
-        val repositoryUri  by args.storing("-u", "--uri",
-                                           help = "set git repository URI")
-                                .default(URI)
+                help = "set output location")
+                .default(LOCATION)
+        val repositoryUri by args.storing("-u", "--uri",
+                help = "set git repository URI")
+                .default(URI)
         val deleteAtTheEnd by args.flagging("-d", "--delete",
-                                           help = "should the project files analyzed be deleted after the execution?")
-                                .default(false)
+                help = "should the project files analyzed be deleted after the execution?")
+                .default(false)
         val includeTestFiles by args.flagging("-t", "--tests",
-                                           help="should the project's test files be taken into account?")
-                                .default(false)
+                help = "should tcouhe project's test files be taken into account?")
+                .default(false)
         measureTimeMillis {
             val bucket = JsonBucket(bucketLocation)
-            val location : File
-            val project : Project
-            val dataSet : DataSet
-            val rules : Collection<Rule>
-            val couplings : Collection<Coupling>
-            val minimumSupport : Double
-            val includeTests = if(includeTestFiles) IncludeTests.INCLUDE else IncludeTests.EXCLUDE
+            val location: File
+            val project: Project
+            val dataSet: DataSet
+            val itemsets: Collection<Itemset>
+            val couplings: Collection<CouplingInfo>
+            val minimumSupport: Double
+            val includeTests = if (includeTestFiles) Tests.INCLUDE else Tests.EXCLUDE
 
             logger.info("cloning the repository: $repositoryUri @ $tempDirectory")
             location = SystemGit.clone(File(tempDirectory).createIfNotExists(), repositoryUri)
+            logger.info("constructing project")
             project = Project(location, includeTests)
-            //minimumSupport = project.sourcePaths.size.let { if(it > 10) 10.0 / it else BASE_SUPPORT }
             minimumSupport = BASE_SUPPORT
             logger.info("collecting imports information")
-            dataSet = collectImports(project)
-            logger.info("learning association rules from imports information")
-            rules = learnAssociationRules(dataSet, minimumSupport, BASE_CONFIDENCE)
-            bucket.save("extracted-rules", rules)
+            dataSet = DataSet(project.imports, project.sourceFiles)
+            logger.info("learning frequent itemsets from imports information")
+            itemsets = dataSet.learnFrequentItemsets(minimumSupport)
+            bucket.save("extracted-itemsets", itemsets)
             logger.info("measuring coupling from rules")
-            couplings = measureCouplingInformation(rules)
+            couplings = measureCouplingInformation(itemsets)
             bucket.save("couplings-found", couplings)
 
-            if(deleteAtTheEnd)
+            if (deleteAtTheEnd)
                 File(tempDirectory)
                         .listFiles()
                         .forEach { it.deleteRecursively() }
 
-            // TODO: analyze possbile metrics based on coupling values generated by rules
         }.apply {
             logger.info("${toDouble() / 1000}")
         }
     }
 
-    fun collectImports(project : Project) : DataSet {
-
-        project.let {
-                    val rows = it.sourceFiles.parallelStream().map { Transaction(it.getFilePath(), it.imports)}.toList()
-                    val header = it.imports.sorted()
-                    return DataSet(header, rows)
-                }
-    }
-
-    fun learnAssociationRules(dataSet: DataSet, minimumSupport : Double, minimumConfidence : Double) : Collection<Rule> {
-        FPGrowth()
-        .setMinSupport(minimumSupport)
-        .setNumPartitions(10)
-        .run(dataSet.toRDD())
-        .generateAssociationRules(minimumConfidence)
-        .toLocalIterator()
-        .toIterable()
-        .let {
-            val rules = mutableListOf<Rule>()
-            for (rule in it) {
-                rules.add(Rule.fromSparkRule(rule, dataSet))
+    private fun measureCouplingInformation(fps: Collection<Itemset>): Collection<CouplingInfo> {
+        var nClassPairs = listOf<Pair<Long, String>>()
+        for(n in fps.map { it.frequency }.distinct().sorted()){
+            for(clazz in fps.flatMap { it.items }){
+                nClassPairs += (n to clazz)
             }
-            return rules
         }
-    }
-
-    fun measureCouplingInformation(rules : Collection<Rule>) : Collection<Coupling>{
-        return rules.flatMap { it.items }
-                .flatMap { item ->
-                    rules.filter { it.items.contains(item) }
-                         .map { it.removeItem(item) }
-                         .flatMap { it.items.map { item to it } }
-                }
-                .map { pair -> Coupling(pair.first, pair.second, rules.filter { it.items.containsAll(pair.toList()) }.map { it.removeInstances() }) }
-        // TODO: testar que todas as regras que contém estes itens estão no Acoplamento devido
-        // TODO remover duplicatas  do tipo A->B, B->A e duplicatas exatas
-
-    }
+        return nClassPairs.asSequence().map { CouplingInfo(it.second, it.first, fps) }.filter{ it.scc.isNotEmpty() }.toList()
+    }/*
+        fps.asSequence()
+            .map { it.frequency }
+            .distinct()
+            .sorted ()
+            .fold(listOf<Pair<Long, String>>()){
+                acc, l -> fps.take(1).flatMap { it.items }.asSequence()
+                        .fold(acc) { subacc, str -> subacc + (l to str) } + acc
+            }.let { nClassPairs -> nClassPairs.map { CouplingInfo(it.second, it.first, fps ) } }
+*/
 }

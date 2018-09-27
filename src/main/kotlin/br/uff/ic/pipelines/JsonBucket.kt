@@ -37,9 +37,8 @@ class JsonBucket(directory: String) {
      * save me the state under this name, please
      * */
     fun save(name: String, state: Any) {
-        Files.newBufferedWriter(getPath(name)).use { writer ->
-            parser.writeValue(writer, state)
-        }
+        Files.newBufferedWriter(getPath(name))
+            .use { writer -> parser.writeValue(writer, state) }
     }
 
     /**

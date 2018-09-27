@@ -2,7 +2,7 @@ package br.uff.ic.domain
 
 import java.io.File
 
-enum class IncludeTests {
+enum class Tests {
     INCLUDE {
         override fun getPredicate(file: File) : Boolean =
                 file.name.endsWith(".java")

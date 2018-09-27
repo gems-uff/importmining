@@ -5,7 +5,6 @@ import com.github.javaparser.ParseStart
 import com.github.javaparser.Providers
 import com.github.javaparser.ast.ImportDeclaration
 import com.github.javaparser.ast.PackageDeclaration
-import com.github.javaparser.ast.visitor.GenericVisitorAdapter
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter
 import java.io.File
 import java.io.FileInputStream
@@ -15,27 +14,31 @@ import java.io.FileInputStream
  *
  * @param file the class' file
  * @param imports the class' import statements
- * @param packageName the class' package name
  * */
-data class SourceFile(private val file: File, val packageName : String, val imports : List<String>) {
+data class SourceFile(private val file: File, private val _imports : List<String> = listOf()) {
 
-    /**
-     * TODO: tornar mais independente de Java
-     * */
+    val packageName : String
+    val imports : List<String>
 
-    fun parseSource() : SourceFile{
+    init {
         val compilationUnit = JavaParser().parse(ParseStart.COMPILATION_UNIT, Providers.provider(FileInputStream(file)))
                 .result.get()
-        val importVisitor = ImportVisitor()
-        importVisitor.visit(compilationUnit, null)
-        val packageVisitor = PackageVisitor()
-        packageVisitor.visit(compilationUnit, null)
 
-        return this.copy(imports = importVisitor.imports.toList(), packageName = packageVisitor.packageName)
+        packageName = PackageVisitor().let {
+            it.visit(compilationUnit, null)
+            it.packageName
+        }
+        imports = if(_imports.isEmpty()){
+             ImportVisitor().let {
+             it.visit(compilationUnit, null)
+             it.imports.toList()
+            }
+        } else _imports
+
     }
 
     fun removeExternalImports(project: Project) : SourceFile {
-        return SourceFile(file, packageName, this.imports.filter { project.defines(it) })
+        return SourceFile(file, this.imports.filter { project.defines(it) })
     }
 
     /**
@@ -69,4 +72,5 @@ data class SourceFile(private val file: File, val packageName : String, val impo
             packageName = n.nameAsString
         }
     }
+
 }

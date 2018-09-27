@@ -6,17 +6,17 @@ import java.io.File
 import kotlin.streams.toList
 
 data class Project(private val location:     File,
-                   private val includeTests: IncludeTests) {
+                   private val includeTests: Tests) {
 
    val sourcePaths : List<String>
    val sourceFiles : List<SourceFile>
    val packages    : List<String>
-   val imports     : List<String>
+   val imports     : Set<String>
 
    init {
        sourcePaths = location.listFilesRecursively { file -> includeTests.getPredicate(file)}
        val allSourceFiles = sourcePaths.parallelStream()
-               .map { orNull { SourceFile(File(it), "", listOf()).parseSource() } } // TODO: verify
+               .map { orNull { SourceFile(File(it))}}
                .filter { it != null}
                .map { it!! }
                .distinct()
@@ -29,15 +29,13 @@ data class Project(private val location:     File,
                .toList()
 
        sourceFiles = allSourceFiles.parallelStream()
-               .map { it.removeExternalImports(this) } // TODO: verify
+               .map { it.removeExternalImports(this) }
                //.filter { it.imports.isNotEmpty() }
                .toList()
 
        imports = this.sourceFiles
                .flatMap { it.imports }
-               .parallelStream()
-               .distinct()
-               .toList()
+               .toSet()
    }
     /**
      * Returns true if the class given by @param clazz is a class of declared in this project
