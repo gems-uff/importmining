@@ -7,6 +7,7 @@ import br.uff.ic.logger.Logger
 import br.uff.ic.logger.LoggerFactory
 import br.uff.ic.mining.DataSet
 import br.uff.ic.mining.Itemset
+import br.uff.ic.pipelines.CSVCouplingWriter
 import br.uff.ic.pipelines.JsonBucket
 import br.uff.ic.vcs.SystemGit
 import com.xenomachina.argparser.ArgParser
@@ -14,6 +15,7 @@ import com.xenomachina.argparser.default
 import org.apache.spark.SparkConf
 import org.apache.spark.api.java.JavaSparkContext
 import java.io.File
+import kotlin.streams.toList
 import kotlin.system.measureTimeMillis
 
 object ImportMining {
@@ -71,35 +73,18 @@ object ImportMining {
             itemsets = dataSet.learnFrequentItemsets(minimumSupport)
             bucket.save("extracted-itemsets", itemsets)
             logger.info("measuring coupling from rules")
-            couplings = measureCouplingInformation(itemsets)
-            bucket.save("couplings-found", couplings)
+            couplings = dataSet.measureCouplingInformation(itemsets)
+            //bucket.save("couplings-found", couplings)
+            //TODO: remove common path name from class to the analysis, and make groupings for each common name in the class name trail
+            //TODO: enumerate tests on each class
+            CSVCouplingWriter("$bucketLocation\\couplings-found.csv").writeData(couplings)
 
             if (deleteAtTheEnd)
                 File(tempDirectory)
                         .listFiles()
                         .forEach { it.deleteRecursively() }
-
         }.apply {
             logger.info("${toDouble() / 1000}")
         }
     }
-
-    private fun measureCouplingInformation(fps: Collection<Itemset>): Collection<CouplingInfo> {
-        var nClassPairs = listOf<Pair<Long, String>>()
-        for(n in fps.map { it.frequency }.distinct().sorted()){
-            for(clazz in fps.flatMap { it.items }){
-                nClassPairs += (n to clazz)
-            }
-        }
-        return nClassPairs.asSequence().map { CouplingInfo(it.second, it.first, fps) }.filter{ it.scc.isNotEmpty() }.toList()
-    }/*
-        fps.asSequence()
-            .map { it.frequency }
-            .distinct()
-            .sorted ()
-            .fold(listOf<Pair<Long, String>>()){
-                acc, l -> fps.take(1).flatMap { it.items }.asSequence()
-                        .fold(acc) { subacc, str -> subacc + (l to str) } + acc
-            }.let { nClassPairs -> nClassPairs.map { CouplingInfo(it.second, it.first, fps ) } }
-*/
 }
