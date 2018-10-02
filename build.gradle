@@ -7,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.1.51'
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.2.71'
         classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.0-RC2'
     }
 }
@@ -26,6 +26,7 @@ repositories {
     mavenCentral()
     maven { url "http://dl.bintray.com/jetbrains/spek" }
     maven { url 'https://jitpack.io' }
+    maven { url "http://dl.bintray.com/kotlin/kotlinx" }
     jcenter()
 }
 
@@ -81,7 +82,8 @@ dependencies {
     compile libraries.mining
     compile libraries.parser
     compile libraries.utils
-
+    compile "com.xenomachina:kotlin-argparser:2.0.4"
+    compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
     testCompile libraries.testing
     testRuntime libraries.testingRuntime
 }
